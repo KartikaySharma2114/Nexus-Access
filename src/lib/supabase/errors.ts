@@ -11,7 +11,7 @@ export function handleDatabaseError(error: PostgrestError): DatabaseError {
   dbError.code = error.code;
   dbError.details = error.details;
   dbError.hint = error.hint;
-  
+
   // Provide user-friendly error messages for common errors
   switch (error.code) {
     case '23505': // unique_violation
@@ -24,7 +24,8 @@ export function handleDatabaseError(error: PostgrestError): DatabaseError {
       }
       break;
     case '23503': // foreign_key_violation
-      dbError.message = 'Cannot delete this record because it is referenced by other records';
+      dbError.message =
+        'Cannot delete this record because it is referenced by other records';
       break;
     case '42501': // insufficient_privilege
       dbError.message = 'You do not have permission to perform this action';
@@ -36,7 +37,7 @@ export function handleDatabaseError(error: PostgrestError): DatabaseError {
       // Keep the original error message for unknown errors
       break;
   }
-  
+
   return dbError;
 }
 

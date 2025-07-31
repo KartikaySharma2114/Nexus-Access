@@ -14,6 +14,9 @@
     "db:reset": "supabase db reset",
     "db:seed": "supabase db seed",
     "db:verify": "node scripts/verify-setup.js",
+    "db:create-test-user": "node scripts/create-test-user.js",
+    "db:seed-manual": "node scripts/seed-database.js",
+    "test:auth": "node scripts/test-auth-flow.js",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status"
@@ -28,6 +31,7 @@
     "@supabase/supabase-js": "^2.53.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.1",
     "lucide-react": "^0.534.0",
     "next": "15.4.5",
     "react": "19.1.0",

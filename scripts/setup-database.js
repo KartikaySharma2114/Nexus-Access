@@ -7,7 +7,9 @@ console.log('🚀 Setting up RBAC database...\n');
 
 console.log('📋 Database setup instructions:\n');
 
-console.log('Since the Supabase CLI has installation issues, please follow these steps:\n');
+console.log(
+  'Since the Supabase CLI has installation issues, please follow these steps:\n'
+);
 
 console.log('🌐 OPTION 1: Use Cloud Supabase (Recommended)');
 console.log('1. Go to https://supabase.com and create a free account');
@@ -44,7 +46,7 @@ const seedFile = path.join(process.cwd(), 'supabase', 'seed.sql');
 
 if (fs.existsSync(migrationsDir)) {
   const files = fs.readdirSync(migrationsDir).sort();
-  files.forEach(file => {
+  files.forEach((file) => {
     if (file.endsWith('.sql')) {
       console.log(`--- ${file} ---`);
       const content = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
