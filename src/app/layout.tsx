@@ -20,23 +20,6 @@ export const metadata: Metadata = {
   description: 'Role-Based Access Control management system for administrators',
 };
 
-// Global error handler for unhandled errors
-function handleGlobalError(error: Error, errorInfo: React.ErrorInfo) {
-  // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error('Global error caught:', error, errorInfo);
-  }
-
-  // In production, you might want to send to an error reporting service
-  if (process.env.NODE_ENV === 'production') {
-    // Example: Send to error reporting service
-    // errorReportingService.captureException(error, {
-    //   extra: errorInfo,
-    //   tags: { level: 'global' }
-    // });
-  }
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -47,11 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ErrorBoundary level="global" onError={handleGlobalError}>
+        <ErrorBoundary>
           <AuthProvider>
-            <ErrorBoundary level="section">
-              <ConditionalLayout>{children}</ConditionalLayout>
-            </ErrorBoundary>
+            <ConditionalLayout>{children}</ConditionalLayout>
           </AuthProvider>
         </ErrorBoundary>
       </body>

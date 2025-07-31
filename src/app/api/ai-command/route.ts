@@ -7,7 +7,40 @@ type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 export async function POST(request: NextRequest) {
   try {
-    const { command: userInput }: { command: string } = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Invalid JSON in request body',
+          error: 'Request body must be valid JSON',
+          suggestions: ['Check your request format'],
+        },
+        { status: 400 }
+      );
+    }
+
+    const { command } = body;
+
+    // Check if this is a parsed command (object) or a string command to process
+    if (typeof command === 'object' && command !== null && 'type' in command) {
+      // This is a parsed AICommand object - execute it directly
+      const supabase = await createClient();
+      const executionResult = await executeCommand(supabase, command as AICommand);
+
+      return NextResponse.json({
+        success: executionResult.success,
+        message: executionResult.message,
+        error: executionResult.error,
+        data: executionResult.data,
+        parsedCommand: command,
+      });
+    }
+
+    // This is a string command - process it first
+    const userInput = command;
 
     // Validate input
     if (
@@ -19,7 +52,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           message: 'Invalid command format',
-          error: 'Command must be a non-empty string',
+          error: 'Command must be a non-empty string or parsed command object',
           suggestions: [
             'Try: "Create a new permission called read_users"',
             'Or: "Give the admin role the read_users permission"',

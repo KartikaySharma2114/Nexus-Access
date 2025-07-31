@@ -39,43 +39,18 @@ export class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    // Generate a unique error ID for tracking
-    const errorId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
     return {
       hasError: true,
       error,
-      errorId,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Enhanced error logging with context
-    const errorDetails = {
-      message: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      errorBoundary: errorInfo.errorBoundary?.name,
-      errorBoundaryStack: errorInfo.errorBoundaryStack,
-      timestamp: new Date().toISOString(),
-      userAgent:
-        typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
-      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
-      level: this.props.level || 'global',
-      errorId: this.state.errorId,
-    };
-
-    console.error('Error caught by boundary:', errorDetails);
+    console.error('Error caught by boundary:', error, errorInfo);
 
     // Call custom error handler if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
-    }
-
-    // In production, you might want to send this to an error reporting service
-    if (process.env.NODE_ENV === 'production') {
-      // Example: Send to error reporting service
-      // errorReportingService.captureException(error, errorDetails);
     }
 
     this.setState({ errorInfo });
@@ -83,7 +58,7 @@ export class ErrorBoundary extends React.Component<
 
   resetError = () => {
     this.retryCount++;
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined, errorId: undefined });
   };
 
   reloadPage = () => {
@@ -197,11 +172,6 @@ export class ErrorBoundary extends React.Component<
                 <div className="font-mono text-xs">
                   {this.state.error?.message || 'Unknown error occurred'}
                 </div>
-                {this.state.errorId && (
-                  <div className="text-xs text-red-500 mt-2">
-                    Error ID: {this.state.errorId}
-                  </div>
-                )}
               </div>
 
               {/* Recovery Options */}
@@ -272,9 +242,7 @@ export class ErrorBoundary extends React.Component<
               {/* Help Text */}
               <div className="text-xs text-gray-500 text-center">
                 If this problem persists, please contact your system
-                administrator
-                {this.state.errorId &&
-                  ` and provide the Error ID: ${this.state.errorId}`}
+                administrator.
               </div>
             </CardContent>
           </Card>
