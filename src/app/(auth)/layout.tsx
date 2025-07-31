@@ -14,7 +14,7 @@ export default function AuthLayout({
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/dashboard');
+      router.push('/');
     }
   }, [user, loading, router]);
 
@@ -27,7 +27,7 @@ export default function AuthLayout({
   }
 
   if (user) {
-    return null; // Will redirect to dashboard
+    return null; // Will redirect to home
   }
 
   return <>{children}</>;
