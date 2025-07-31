@@ -132,37 +132,245 @@ export type NaturalLanguageCommandInput = z.infer<
   typeof naturalLanguageCommandSchema
 >;
 
-// Validation utility functions
-export function validatePermissionName(name: string): boolean {
-  return createPermissionSchema.shape.name.safeParse(name).success;
+// Enhanced validation utility functions
+export function validatePermissionName(name: string): {
+  isValid: boolean;
+  error?: string;
+} {
+  const result = createPermissionSchema.shape.name.safeParse(name);
+  return {
+    isValid: result.success,
+    error: result.success ? undefined : result.error.errors[0]?.message,
+  };
 }
 
-export function validateRoleName(name: string): boolean {
-  return createRoleSchema.shape.name.safeParse(name).success;
+export function validateRoleName(name: string): {
+  isValid: boolean;
+  error?: string;
+} {
+  const result = createRoleSchema.shape.name.safeParse(name);
+  return {
+    isValid: result.success,
+    error: result.success ? undefined : result.error.errors[0]?.message,
+  };
 }
 
-export function validateUUID(id: string): boolean {
-  return idSchema.safeParse(id).success;
+export function validateUUID(id: string): { isValid: boolean; error?: string } {
+  const result = idSchema.safeParse(id);
+  return {
+    isValid: result.success,
+    error: result.success ? undefined : result.error.errors[0]?.message,
+  };
 }
 
-export function validateEmail(email: string): boolean {
-  return z.string().email({ message: 'Invalid email' }).safeParse(email)
-    .success;
+export function validateEmail(email: string): {
+  isValid: boolean;
+  error?: string;
+} {
+  const result = z
+    .string()
+    .email({ message: 'Invalid email' })
+    .safeParse(email);
+  return {
+    isValid: result.success,
+    error: result.success ? undefined : result.error.errors[0]?.message,
+  };
 }
 
-// Safe parsing utilities with error handling
+// Enhanced safe parsing utilities with detailed error information
 export function safeParsePermission(data: unknown) {
-  return createPermissionSchema.safeParse(data);
+  const result = createPermissionSchema.safeParse(data);
+  return {
+    ...result,
+    errors: result.success
+      ? []
+      : result.error.errors.map((err) => ({
+          field: err.path.join('.'),
+          message: err.message,
+          code: err.code,
+        })),
+  };
 }
 
 export function safeParseRole(data: unknown) {
-  return createRoleSchema.safeParse(data);
+  const result = createRoleSchema.safeParse(data);
+  return {
+    ...result,
+    errors: result.success
+      ? []
+      : result.error.errors.map((err) => ({
+          field: err.path.join('.'),
+          message: err.message,
+          code: err.code,
+        })),
+  };
 }
 
 export function safeParseAssociation(data: unknown) {
-  return createAssociationSchema.safeParse(data);
+  const result = createAssociationSchema.safeParse(data);
+  return {
+    ...result,
+    errors: result.success
+      ? []
+      : result.error.errors.map((err) => ({
+          field: err.path.join('.'),
+          message: err.message,
+          code: err.code,
+        })),
+  };
 }
 
 export function safeParseLogin(data: unknown) {
-  return loginSchema.safeParse(data);
+  const result = loginSchema.safeParse(data);
+  return {
+    ...result,
+    errors: result.success
+      ? []
+      : result.error.errors.map((err) => ({
+          field: err.path.join('.'),
+          message: err.message,
+          code: err.code,
+        })),
+  };
 }
+
+// Batch validation utilities
+export function validateMultiple<T>(
+  items: unknown[],
+  schema: z.ZodSchema<T>
+): {
+  validItems: T[];
+  invalidItems: Array<{
+    index: number;
+    errors: Array<{ field: string; message: string; code: string }>;
+  }>;
+  isAllValid: boolean;
+} {
+  const validItems: T[] = [];
+  const invalidItems: Array<{
+    index: number;
+    errors: Array<{ field: string; message: string; code: string }>;
+  }> = [];
+
+  items.forEach((item, index) => {
+    const result = schema.safeParse(item);
+    if (result.success) {
+      validItems.push(result.data);
+    } else {
+      invalidItems.push({
+        index,
+        errors: result.error.errors.map((err) => ({
+          field: err.path.join('.'),
+          message: err.message,
+          code: err.code,
+        })),
+      });
+    }
+  });
+
+  return {
+    validItems,
+    invalidItems,
+    isAllValid: invalidItems.length === 0,
+  };
+}
+
+// Real-time validation helpers
+export function createFieldValidator<T extends Record<string, unknown>>(
+  schema: z.ZodSchema<T>
+) {
+  return (fieldName: keyof T, value: unknown) => {
+    try {
+      const fieldSchema = (schema as z.ZodObject<Record<string, z.ZodTypeAny>>)
+        .shape[fieldName as string];
+      if (!fieldSchema) {
+        return { isValid: true };
+      }
+
+      const result = fieldSchema.safeParse(value);
+      return {
+        isValid: result.success,
+        error: result.success ? undefined : result.error.errors[0]?.message,
+      };
+    } catch {
+      return {
+        isValid: false,
+        error: 'Validation error occurred',
+      };
+    }
+  };
+}
+
+// Form validation state helpers
+export function getFormErrors(zodError: z.ZodError): Record<string, string> {
+  const errors: Record<string, string> = {};
+  zodError.errors.forEach((error) => {
+    const path = error.path.join('.');
+    errors[path] = error.message;
+  });
+  return errors;
+}
+
+export function hasFormErrors(
+  errors: Record<string, string | undefined>
+): boolean {
+  return Object.values(errors).some(
+    (error) => error !== undefined && error !== ''
+  );
+}
+
+export function getFirstFormError(
+  errors: Record<string, string | undefined>
+): string | undefined {
+  return Object.values(errors).find(
+    (error) => error !== undefined && error !== ''
+  );
+}
+
+// Validation message helpers
+export function formatValidationErrors(
+  errors: Array<{ field: string; message: string }>
+): string {
+  if (errors.length === 0) return '';
+  if (errors.length === 1) return errors[0].message;
+
+  return `Multiple validation errors: ${errors.map((err) => `${err.field}: ${err.message}`).join(', ')}`;
+}
+
+// Custom validation rules
+export const customValidationRules = {
+  // Check if a name is unique (would need to be called with async validation)
+  uniqueName: (existingNames: string[]) =>
+    z.string().refine((name) => !existingNames.includes(name.toLowerCase()), {
+      message: 'This name is already taken',
+    }),
+
+  // Password strength validation
+  strongPassword: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(
+      /[^A-Za-z0-9]/,
+      'Password must contain at least one special character'
+    ),
+
+  // URL validation
+  validUrl: z.string().url('Please enter a valid URL'),
+
+  // Phone number validation (basic)
+  phoneNumber: z
+    .string()
+    .regex(/^\+?[\d\s\-\(\)]+$/, 'Please enter a valid phone number'),
+
+  // File size validation (for future file uploads)
+  fileSize: (maxSizeInMB: number) =>
+    z
+      .number()
+      .max(
+        maxSizeInMB * 1024 * 1024,
+        `File size must be less than ${maxSizeInMB}MB`
+      ),
+};
