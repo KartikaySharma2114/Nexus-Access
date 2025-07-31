@@ -7,7 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { DashboardStats } from '@/components/dashboard/dashboard-stats';
 import Link from 'next/link';
+import { Shield, Users, Link2, MessageSquare } from 'lucide-react';
 
 export default async function Home() {
   const supabase = await createClient();
@@ -20,56 +22,80 @@ export default async function Home() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-          <p className="text-gray-600">
-            Manage your role-based access control system
-          </p>
-        </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Overview of your role-based access control system
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Statistics */}
+      <DashboardStats />
+
+      {/* Quick Actions */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link href="/permissions">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle>Permissions</CardTitle>
-                <CardDescription>
-                  Create and manage system permissions
-                </CardDescription>
+            <Card className="hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Permissions
+                </CardTitle>
+                <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">
-                  Define what actions are available in your system
-                </p>
+                <CardDescription className="text-xs">
+                  Create and manage system permissions
+                </CardDescription>
               </CardContent>
             </Card>
           </Link>
 
           <Link href="/roles">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle>Roles</CardTitle>
-                <CardDescription>Create and manage user roles</CardDescription>
+            <Card className="hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Roles</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">
-                  Define different user types and their capabilities
-                </p>
+                <CardDescription className="text-xs">
+                  Create and manage user roles
+                </CardDescription>
               </CardContent>
             </Card>
           </Link>
 
           <Link href="/associations">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle>Associations</CardTitle>
-                <CardDescription>Link permissions to roles</CardDescription>
+            <Card className="hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Associations
+                </CardTitle>
+                <Link2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">
-                  Control what each role can do in the system
-                </p>
+                <CardDescription className="text-xs">
+                  Link permissions to roles
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/natural-language">
+            <Card className="hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  AI Assistant
+                </CardTitle>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-xs">
+                  Configure using natural language
+                </CardDescription>
               </CardContent>
             </Card>
           </Link>

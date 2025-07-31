@@ -6,7 +6,7 @@ const testEndpoints = [
     name: 'GET /api/permissions',
     method: 'GET',
     path: '/api/permissions',
-    description: 'List all permissions with pagination and search'
+    description: 'List all permissions with pagination and search',
   },
   {
     name: 'POST /api/permissions',
@@ -15,14 +15,14 @@ const testEndpoints = [
     description: 'Create a new permission',
     body: {
       name: 'test-permission',
-      description: 'A test permission'
-    }
+      description: 'A test permission',
+    },
   },
   {
     name: 'GET /api/permissions/[id]',
     method: 'GET',
     path: '/api/permissions/123e4567-e89b-12d3-a456-426614174000',
-    description: 'Get a specific permission by ID'
+    description: 'Get a specific permission by ID',
   },
   {
     name: 'PUT /api/permissions/[id]',
@@ -31,15 +31,15 @@ const testEndpoints = [
     description: 'Update a specific permission',
     body: {
       name: 'updated-permission',
-      description: 'An updated test permission'
-    }
+      description: 'An updated test permission',
+    },
   },
   {
     name: 'DELETE /api/permissions/[id]',
     method: 'DELETE',
     path: '/api/permissions/123e4567-e89b-12d3-a456-426614174000',
-    description: 'Delete a specific permission'
-  }
+    description: 'Delete a specific permission',
+  },
 ];
 
 console.log('Permission API Endpoints Test Summary:');
@@ -58,11 +58,19 @@ testEndpoints.forEach((endpoint, index) => {
 
 console.log('Key Features Implemented:');
 console.log('========================');
-console.log('✅ GET /api/permissions - List permissions with search and pagination');
-console.log('✅ POST /api/permissions - Create new permissions with validation');
+console.log(
+  '✅ GET /api/permissions - List permissions with search and pagination'
+);
+console.log(
+  '✅ POST /api/permissions - Create new permissions with validation'
+);
 console.log('✅ GET /api/permissions/[id] - Get individual permission');
-console.log('✅ PUT /api/permissions/[id] - Update permissions with duplicate checking');
-console.log('✅ DELETE /api/permissions/[id] - Delete permissions with constraint checking');
+console.log(
+  '✅ PUT /api/permissions/[id] - Update permissions with duplicate checking'
+);
+console.log(
+  '✅ DELETE /api/permissions/[id] - Delete permissions with constraint checking'
+);
 console.log('✅ Zod validation for all inputs');
 console.log('✅ Duplicate name checking');
 console.log('✅ Proper error handling with user-friendly messages');
