@@ -22,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { useToast } from '@/components/ui/toast';
 import { z } from 'zod';
 import type { Role } from '@/lib/types';
 
@@ -43,6 +44,7 @@ interface RoleFormProps {
 export function RoleForm({ isOpen, onClose, role, onSuccess }: RoleFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const isEditing = !!role;
 
@@ -92,6 +94,17 @@ export function RoleForm({ isOpen, onClose, role, onSuccess }: RoleFormProps) {
           result.error || `Failed to ${isEditing ? 'update' : 'create'} role`
         );
       }
+
+      // Show success toast
+      const successMessage =
+        result.message ||
+        `Role ${isEditing ? 'updated' : 'created'} successfully`;
+
+      addToast({
+        title: 'Success',
+        description: successMessage,
+        variant: 'success',
+      });
 
       onSuccess();
     } catch (err) {

@@ -23,7 +23,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ErrorDisplay } from '@/components/common/error-display';
+// import { ErrorDisplay } from '@/components/common/error-display';
+import { useToast } from '@/components/ui/toast';
 import { z } from 'zod';
 import { createPermissionSchema } from '@/lib/validations';
 import type { Permission } from '@/lib/types';
@@ -53,6 +54,7 @@ export function PermissionForm({
   const [success, setSuccess] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
+  const { addToast } = useToast();
 
   const isEditing = !!permission;
 
@@ -121,7 +123,7 @@ export function PermissionForm({
       return 'Too many requests. Please wait a moment and try again.';
     }
 
-    if (error.statusCode >= 500) {
+    if (error.statusCode && error.statusCode >= 500) {
       return 'Server error occurred. Please try again in a moment.';
     }
 
@@ -153,17 +155,20 @@ export function PermissionForm({
         throw result as APIError;
       }
 
-      // Show success message
+      // Show success toast
       const successMessage =
         result.message ||
         `Permission ${isEditing ? 'updated' : 'created'} successfully`;
-      setSuccess(successMessage);
 
-      // Close dialog after a brief delay to show success message
-      setTimeout(() => {
-        onSuccess();
-        onClose();
-      }, 1500);
+      addToast({
+        title: 'Success',
+        description: successMessage,
+        variant: 'success',
+      });
+
+      // Close dialog and refresh
+      onSuccess();
+      onClose();
     } catch (err: unknown) {
       console.error(
         `Error ${isEditing ? 'updating' : 'creating'} permission:`,
@@ -219,14 +224,9 @@ export function PermissionForm({
 
             {/* Error Display */}
             {error && (
-              <ErrorDisplay
-                error={error}
-                title="Form Error"
-                showRetry={canRetry}
-                onRetry={handleRetry}
-                showDismiss
-                onDismiss={() => setError(null)}
-              />
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                {error}
+              </div>
             )}
 
             {/* Permission Name Field */}
@@ -267,6 +267,7 @@ export function PermissionForm({
                     <Input
                       placeholder="Optional description of what this permission allows"
                       {...field}
+                      value={field.value || ''}
                       disabled={loading}
                     />
                   </FormControl>

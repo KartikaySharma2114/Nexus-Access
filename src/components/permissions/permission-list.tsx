@@ -13,6 +13,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoadingState, LoadingSpinner } from '@/components/ui/loading';
+import { SearchBar } from '@/components/ui/search-input';
+import { useToast } from '@/components/ui/toast';
 import { PermissionForm } from './permission-form';
 import { DeletePermissionDialog } from './delete-permission-dialog';
 import { createClient } from '@/lib/supabase/client';
@@ -31,6 +34,7 @@ export function PermissionList({ className }: PermissionListProps) {
   const [selectedPermission, setSelectedPermission] =
     useState<Permission | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const supabase = createClient();
 
@@ -54,9 +58,14 @@ export function PermissionList({ className }: PermissionListProps) {
       setPermissions(result.data || []);
     } catch (err) {
       console.error('Error fetching permissions:', err);
-      setError(
-        err instanceof Error ? err.message : 'Failed to fetch permissions'
-      );
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to fetch permissions';
+      setError(errorMessage);
+      addToast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -138,98 +147,75 @@ export function PermissionList({ className }: PermissionListProps) {
         </CardHeader>
         <CardContent>
           {/* Search Bar */}
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search permissions..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search permissions..."
+            showResults={true}
+            resultCount={permissions.length}
+            isSearching={loading}
+            className="mb-4"
+          />
 
-          {/* Error State */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-
-          {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin mr-2" />
-              Loading permissions...
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loading && !error && permissions.length === 0 && (
-            <div className="text-center py-8">
-              <div className="text-gray-500 mb-2">
-                {searchQuery
-                  ? 'No permissions found matching your search.'
-                  : 'No permissions created yet.'}
-              </div>
-              {!searchQuery && (
-                <Button onClick={handleCreatePermission} variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create your first permission
-                </Button>
-              )}
-            </div>
-          )}
-
-          {/* Permissions Table */}
-          {!loading && !error && permissions.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {permissions.map((permission) => (
-                  <TableRow key={permission.id}>
-                    <TableCell className="font-medium">
-                      {permission.name}
-                    </TableCell>
-                    <TableCell>
-                      {permission.description || (
-                        <span className="text-gray-400 italic">
-                          No description
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>{formatDate(permission.created_at)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditPermission(permission)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeletePermission(permission)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          <LoadingState
+            isLoading={loading}
+            error={error}
+            isEmpty={permissions.length === 0}
+            loadingMessage="Loading permissions..."
+            emptyMessage={
+              searchQuery
+                ? 'No permissions found matching your search.'
+                : 'No permissions created yet.'
+            }
+          >
+            {permissions.length > 0 && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+                </TableHeader>
+                <TableBody>
+                  {permissions.map((permission) => (
+                    <TableRow key={permission.id}>
+                      <TableCell className="font-medium">
+                        {permission.name}
+                      </TableCell>
+                      <TableCell>
+                        {permission.description || (
+                          <span className="text-gray-400 italic">
+                            No description
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>{formatDate(permission.created_at)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditPermission(permission)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeletePermission(permission)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </LoadingState>
         </CardContent>
       </Card>
 

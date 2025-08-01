@@ -1,255 +1,96 @@
-'use client';
+import { useState, useCallback } from 'react';
 
-import { useState, useCallback, useEffect } from 'react';
-import { z } from 'zod';
-
-interface ValidationOptions {
-  validateOnChange?: boolean;
-  validateOnBlur?: boolean;
-  debounceMs?: number;
+export interface ValidationRule {
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: RegExp;
+  custom?: (value: string) => string | null;
 }
 
-interface ValidationResult<T> {
-  data: T | null;
-  errors: Record<string, string>;
+export interface ValidationRules {
+  [key: string]: ValidationRule;
+}
+
+export interface ValidationErrors {
+  [key: string]: string;
+}
+
+export interface FormValidationResult {
   isValid: boolean;
-  hasErrors: boolean;
+  errors: ValidationErrors;
 }
 
-interface UseFormValidationReturn<T> {
-  values: Partial<T>;
-  errors: Record<string, string>;
-  touched: Record<string, boolean>;
-  isValid: boolean;
-  isValidating: boolean;
-  hasErrors: boolean;
-  setValue: (field: keyof T, value: any) => void;
-  setValues: (values: Partial<T>) => void;
-  setError: (field: keyof T, error: string) => void;
-  clearError: (field: keyof T) => void;
-  clearErrors: () => void;
-  setTouched: (field: keyof T, touched?: boolean) => void;
-  validateField: (field: keyof T) => Promise<boolean>;
-  validateForm: () => Promise<ValidationResult<T>>;
-  reset: (values?: Partial<T>) => void;
-  handleChange: (field: keyof T) => (value: any) => void;
-  handleBlur: (field: keyof T) => () => void;
-}
-
-export function useFormValidation<T extends Record<string, any>>(
-  schema: z.ZodSchema<T>,
-  initialValues: Partial<T> = {},
-  options: ValidationOptions = {}
-): UseFormValidationReturn<T> {
-  const {
-    validateOnChange = true,
-    validateOnBlur = true,
-    debounceMs = 300,
-  } = options;
-
-  const [values, setValuesState] = useState<Partial<T>>(initialValues);
-  const [errors, setErrorsState] = useState<Record<string, string>>({});
-  const [touched, setTouchedState] = useState<Record<string, boolean>>({});
-  const [isValidating, setIsValidating] = useState(false);
-
-  // Debounced validation
-  const [validationTimeout, setValidationTimeout] =
-    useState<NodeJS.Timeout | null>(null);
+export function useFormValidation(rules: ValidationRules) {
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   const validateField = useCallback(
-    async (field: keyof T): Promise<boolean> => {
-      try {
-        const fieldSchema = schema.shape[field as string];
-        if (!fieldSchema) return true;
+    (name: string, value: string): string | null => {
+      const rule = rules[name];
+      if (!rule) return null;
 
-        const result = await fieldSchema.parseAsync(values[field]);
-
-        // Clear error if validation passes
-        setErrorsState((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[field as string];
-          return newErrors;
-        });
-
-        return true;
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          const fieldError = error.errors[0]?.message || 'Invalid value';
-          setErrorsState((prev) => ({
-            ...prev,
-            [field as string]: fieldError,
-          }));
-        }
-        return false;
+      if (rule.required && (!value || value.trim() === '')) {
+        return 'This field is required';
       }
+
+      if (rule.minLength && value.length < rule.minLength) {
+        return `Minimum length is ${rule.minLength} characters`;
+      }
+
+      if (rule.maxLength && value.length > rule.maxLength) {
+        return `Maximum length is ${rule.maxLength} characters`;
+      }
+
+      if (rule.pattern && !rule.pattern.test(value)) {
+        return 'Invalid format';
+      }
+
+      if (rule.custom) {
+        return rule.custom(value);
+      }
+
+      return null;
     },
-    [schema, values]
+    [rules]
   );
 
-  const validateForm = useCallback(async (): Promise<ValidationResult<T>> => {
-    setIsValidating(true);
+  const validateForm = useCallback(
+    (formData: Record<string, string>): FormValidationResult => {
+      const newErrors: ValidationErrors = {};
+      let isValid = true;
 
-    try {
-      const result = await schema.parseAsync(values);
-
-      // Clear all errors if validation passes
-      setErrorsState({});
-
-      return {
-        data: result,
-        errors: {},
-        isValid: true,
-        hasErrors: false,
-      };
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
-
-        error.errors.forEach((err) => {
-          const path = err.path.join('.');
-          newErrors[path] = err.message;
-        });
-
-        setErrorsState(newErrors);
-
-        return {
-          data: null,
-          errors: newErrors,
-          isValid: false,
-          hasErrors: true,
-        };
-      }
-
-      // Handle unexpected errors
-      const genericError = { form: 'Validation failed' };
-      setErrorsState(genericError);
-
-      return {
-        data: null,
-        errors: genericError,
-        isValid: false,
-        hasErrors: true,
-      };
-    } finally {
-      setIsValidating(false);
-    }
-  }, [schema, values]);
-
-  const setValue = useCallback(
-    (field: keyof T, value: any) => {
-      setValuesState((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-
-      // Validate on change if enabled
-      if (validateOnChange && touched[field as string]) {
-        if (validationTimeout) {
-          clearTimeout(validationTimeout);
+      Object.keys(rules).forEach((fieldName) => {
+        const value = formData[fieldName] || '';
+        const error = validateField(fieldName, value);
+        if (error) {
+          newErrors[fieldName] = error;
+          isValid = false;
         }
+      });
 
-        const timeout = setTimeout(() => {
-          validateField(field);
-        }, debounceMs);
-
-        setValidationTimeout(timeout);
-      }
+      setErrors(newErrors);
+      return { isValid, errors: newErrors };
     },
-    [validateOnChange, touched, validateField, debounceMs, validationTimeout]
+    [rules, validateField]
   );
 
-  const setValues = useCallback((newValues: Partial<T>) => {
-    setValuesState((prev) => ({
-      ...prev,
-      ...newValues,
-    }));
+  const clearErrors = useCallback(() => {
+    setErrors({});
   }, []);
 
-  const setError = useCallback((field: keyof T, error: string) => {
-    setErrorsState((prev) => ({
-      ...prev,
-      [field as string]: error,
-    }));
-  }, []);
-
-  const clearError = useCallback((field: keyof T) => {
-    setErrorsState((prev) => {
+  const clearFieldError = useCallback((fieldName: string) => {
+    setErrors((prev) => {
       const newErrors = { ...prev };
-      delete newErrors[field as string];
+      delete newErrors[fieldName];
       return newErrors;
     });
   }, []);
 
-  const clearErrors = useCallback(() => {
-    setErrorsState({});
-  }, []);
-
-  const setTouched = useCallback(
-    (field: keyof T, isTouched: boolean = true) => {
-      setTouchedState((prev) => ({
-        ...prev,
-        [field as string]: isTouched,
-      }));
-    },
-    []
-  );
-
-  const reset = useCallback(
-    (newValues?: Partial<T>) => {
-      setValuesState(newValues || initialValues);
-      setErrorsState({});
-      setTouchedState({});
-    },
-    [initialValues]
-  );
-
-  const handleChange = useCallback(
-    (field: keyof T) => (value: any) => {
-      setValue(field, value);
-    },
-    [setValue]
-  );
-
-  const handleBlur = useCallback(
-    (field: keyof T) => () => {
-      setTouched(field, true);
-
-      if (validateOnBlur) {
-        validateField(field);
-      }
-    },
-    [validateOnBlur, validateField, setTouched]
-  );
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (validationTimeout) {
-        clearTimeout(validationTimeout);
-      }
-    };
-  }, [validationTimeout]);
-
-  const isValid = Object.keys(errors).length === 0;
-  const hasErrors = Object.keys(errors).length > 0;
-
   return {
-    values,
     errors,
-    touched,
-    isValid,
-    isValidating,
-    hasErrors,
-    setValue,
-    setValues,
-    setError,
-    clearError,
-    clearErrors,
-    setTouched,
     validateField,
     validateForm,
-    reset,
-    handleChange,
-    handleBlur,
+    clearErrors,
+    clearFieldError,
   };
 }

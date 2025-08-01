@@ -12,7 +12,7 @@ export interface DatabaseError extends Error {
 export interface APIError {
   error: string;
   message?: string;
-  details?: any;
+  details?: unknown;
   code?: string | number;
   statusCode: number;
   timestamp?: string;
@@ -96,7 +96,7 @@ export function handleDatabaseError(error: PostgrestError): DatabaseError {
 export function createAPIError(
   message: string,
   statusCode: number = 500,
-  details?: any,
+  details?: unknown,
   code?: string | number
 ): APIError {
   return {
@@ -177,11 +177,11 @@ export function getUserFriendlyMessage(
 }
 
 export function formatAPIResponse(
-  data?: any,
+  data?: unknown,
   message?: string,
   statusCode: number = 200
 ) {
-  const response: any = {
+  const response: Record<string, unknown> = {
     success: statusCode >= 200 && statusCode < 300,
     statusCode,
     timestamp: new Date().toISOString(),
@@ -201,7 +201,7 @@ export function formatAPIResponse(
 export function formatAPIError(
   error: string | Error,
   statusCode: number = 500,
-  details?: any,
+  details?: unknown,
   path?: string
 ): APIError {
   const message = error instanceof Error ? error.message : error;

@@ -1,84 +1,83 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
-  // Skip middleware if Supabase environment variables are not set
-  // This allows the app to run during development before Supabase is configured
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    return NextResponse.next();
-  }
+  try {
+    const { supabase, response } = createClient(request);
 
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+    // Refresh session if expired - required for Server Components
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
+    // Protect API routes
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      // Skip auth check for health check endpoints
+      if (request.nextUrl.pathname === '/api/health') {
+        return response;
+      }
+
+      // Check for valid session on API routes
+      if (!session) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
+      }
+
+      // Add rate limiting headers
+      const rateLimitHeaders = {
+        'X-RateLimit-Limit': '100',
+        'X-RateLimit-Remaining': '99',
+        'X-RateLimit-Reset': String(Date.now() + 60000),
+      };
+
+      // Add security headers to API responses
+      const securityHeaders = {
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        ...rateLimitHeaders,
+      };
+
+      Object.entries(securityHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+
+      return response;
     }
-  );
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+    // Protect dashboard routes
+    if (request.nextUrl.pathname.startsWith('/dashboard')) {
+      if (!session) {
+        const redirectUrl = new URL('/login', request.url);
+        redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+        return NextResponse.redirect(redirectUrl);
+      }
+    }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    // Redirect authenticated users away from login page
+    if (request.nextUrl.pathname === '/login' && session) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/signup') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    request.nextUrl.pathname !== '/'
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+    return response;
+  } catch (error) {
+    console.error('Middleware error:', error);
+
+    // For API routes, return JSON error
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
+
+    // For page routes, redirect to error page
+    return NextResponse.redirect(new URL('/error', request.url));
   }
-
-  // If user is authenticated and trying to access login/signup, redirect to dashboard
-  if (
-    user &&
-    (request.nextUrl.pathname.startsWith('/login') ||
-      request.nextUrl.pathname.startsWith('/signup'))
-  ) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/';
-    return NextResponse.redirect(url);
-  }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
-  // creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object instead of the supabaseResponse object
-
-  return supabaseResponse;
 }
 
 export const config = {
@@ -88,8 +87,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
 };

@@ -28,7 +28,16 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ data: associations });
+    // Flatten the data to prevent circular references
+    const flattenedData = associations.map((a) => ({
+      role_id: a.roles.id,
+      role_name: a.roles.name,
+      permission_id: a.permissions.id,
+      permission_name: a.permissions.name,
+      permission_description: a.permissions.description,
+    }));
+
+    return NextResponse.json({ data: flattenedData });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json(

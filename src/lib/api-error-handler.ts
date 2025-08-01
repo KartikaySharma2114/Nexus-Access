@@ -1,295 +1,204 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import {
-  handleDatabaseError,
-  formatAPIError,
-  createAPIError,
-} from '@/lib/supabase/errors';
-import type { DatabaseError } from '@/lib/supabase/errors';
+/**
+ * API Error handling utilities for server-side operations
+ */
 
-interface APIHandlerOptions {
-  requireAuth?: boolean;
-  validateBody?: z.ZodSchema<any>;
-  validateQuery?: z.ZodSchema<any>;
-  rateLimit?: {
-    requests: number;
-    windowMs: number;
-  };
+import { NextResponse } from 'next/server';
+
+export interface APIErrorResponse {
+  error: string;
+  message?: string;
+  details?: unknown;
+  code?: string | number;
+  statusCode: number;
+  timestamp: string;
+  path?: string;
 }
 
-interface APIContext {
-  request: NextRequest;
-  params?: Record<string, string>;
-  body?: any;
-  query?: any;
-  user?: any;
+export interface DatabaseErrorInfo {
+  code?: string;
+  details?: string;
+  hint?: string;
+  message: string;
 }
 
-type APIHandler = (context: APIContext) => Promise<NextResponse>;
-
-// Rate limiting store (in production, use Redis or similar)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-function getRateLimitKey(request: NextRequest): string {
-  // Use IP address or user ID for rate limiting
-  const forwarded = request.headers.get('x-forwarded-for');
-  const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
-  return `rate_limit:${ip}`;
-}
-
-function checkRateLimit(
-  request: NextRequest,
-  options: { requests: number; windowMs: number }
-): boolean {
-  const key = getRateLimitKey(request);
-  const now = Date.now();
-  const windowStart = now - options.windowMs;
-
-  const current = rateLimitStore.get(key);
-
-  if (!current || current.resetTime < windowStart) {
-    // Reset or initialize
-    rateLimitStore.set(key, { count: 1, resetTime: now });
-    return true;
-  }
-
-  if (current.count >= options.requests) {
-    return false;
-  }
-
-  current.count++;
-  return true;
-}
-
-export function withErrorHandling(
-  handler: APIHandler,
-  options: APIHandlerOptions = {}
-) {
-  return async (
-    request: NextRequest,
-    context?: { params?: Record<string, string> }
-  ) => {
-    const startTime = Date.now();
-    const method = request.method;
-    const url = request.url;
-
-    try {
-      // Rate limiting
-      if (options.rateLimit) {
-        const allowed = checkRateLimit(request, options.rateLimit);
-        if (!allowed) {
-          return NextResponse.json(
-            createAPIError('Too many requests', 429, {
-              retryAfter: Math.ceil(options.rateLimit.windowMs / 1000),
-            }),
-            { status: 429 }
-          );
-        }
-      }
-
-      // Parse and validate request body
-      let body;
-      if (
-        options.validateBody &&
-        (method === 'POST' || method === 'PUT' || method === 'PATCH')
-      ) {
-        try {
-          const rawBody = await request.json();
-          const validation = options.validateBody.safeParse(rawBody);
-
-          if (!validation.success) {
-            return NextResponse.json(
-              createAPIError('Invalid request body', 400, {
-                validationErrors: validation.error.errors.map((err) => ({
-                  field: err.path.join('.'),
-                  message: err.message,
-                  code: err.code,
-                })),
-              }),
-              { status: 400 }
-            );
-          }
-
-          body = validation.data;
-        } catch (error) {
-          return NextResponse.json(
-            createAPIError('Invalid JSON in request body', 400),
-            { status: 400 }
-          );
-        }
-      }
-
-      // Parse and validate query parameters
-      let query;
-      if (options.validateQuery) {
-        const searchParams = new URL(request.url).searchParams;
-        const queryObject = Object.fromEntries(searchParams.entries());
-
-        const validation = options.validateQuery.safeParse(queryObject);
-        if (!validation.success) {
-          return NextResponse.json(
-            createAPIError('Invalid query parameters', 400, {
-              validationErrors: validation.error.errors.map((err) => ({
-                field: err.path.join('.'),
-                message: err.message,
-                code: err.code,
-              })),
-            }),
-            { status: 400 }
-          );
-        }
-
-        query = validation.data;
-      }
-
-      // TODO: Add authentication check if required
-      // if (options.requireAuth) {
-      //   const user = await getCurrentUser(request);
-      //   if (!user) {
-      //     return NextResponse.json(
-      //       createAPIError('Authentication required', 401),
-      //       { status: 401 }
-      //     );
-      //   }
-      // }
-
-      // Call the actual handler
-      const apiContext: APIContext = {
-        request,
-        params: context?.params,
-        body,
-        query,
-        // user,
+/**
+ * Handle database errors and convert to user-friendly messages
+ */
+export function handleDatabaseError(error: DatabaseErrorInfo): APIErrorResponse {
+  const timestamp = new Date().toISOString();
+  
+  // Provide user-friendly error messages for common database errors
+  switch (error.code) {
+    case '23505': // unique_violation
+      return {
+        error: 'Duplicate entry',
+        message: 'A record with this information already exists',
+        details: error.details,
+        code: error.code,
+        statusCode: 409,
+        timestamp,
       };
-
-      const response = await handler(apiContext);
-
-      // Log successful requests in development
-      if (process.env.NODE_ENV === 'development') {
-        const duration = Date.now() - startTime;
-        console.log(`${method} ${url} - ${response.status} (${duration}ms)`);
-      }
-
-      return response;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-
-      // Log error details
-      console.error(`API Error in ${method} ${url}:`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        duration,
-        timestamp: new Date().toISOString(),
-      });
-
-      // Handle different types of errors
-      if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          createAPIError('Validation failed', 400, {
-            validationErrors: error.errors.map((err) => ({
-              field: err.path.join('.'),
-              message: err.message,
-              code: err.code,
-            })),
-          }),
-          { status: 400 }
-        );
-      }
-
-      // Handle database errors
-      if (error && typeof error === 'object' && 'code' in error) {
-        const dbError = error as DatabaseError;
-        const statusCode = dbError.statusCode || 500;
-
-        return NextResponse.json(
-          formatAPIError(
-            dbError.message,
-            statusCode,
-            {
-              code: dbError.code,
-              details: dbError.details,
-              hint: dbError.hint,
-              recoverable: dbError.recoverable,
-            },
-            url
-          ),
-          { status: statusCode }
-        );
-      }
-
-      // Handle generic errors
-      const errorMessage =
-        error instanceof Error ? error.message : 'Internal server error';
-      const statusCode = 500;
-
-      return NextResponse.json(
-        formatAPIError(errorMessage, statusCode, undefined, url),
-        { status: statusCode }
-      );
-    }
-  };
+    case '23503': // foreign_key_violation
+      return {
+        error: 'Reference constraint violation',
+        message: 'Cannot delete this record because it is referenced by other records',
+        details: error.details,
+        code: error.code,
+        statusCode: 409,
+        timestamp,
+      };
+    case '42501': // insufficient_privilege
+      return {
+        error: 'Access denied',
+        message: 'You do not have permission to perform this action',
+        details: error.details,
+        code: error.code,
+        statusCode: 403,
+        timestamp,
+      };
+    case 'PGRST116': // not_found
+      return {
+        error: 'Not found',
+        message: 'The requested record was not found',
+        details: error.details,
+        code: error.code,
+        statusCode: 404,
+        timestamp,
+      };
+    default:
+      return {
+        error: 'Database error',
+        message: error.message || 'An unexpected database error occurred',
+        details: error.details,
+        code: error.code,
+        statusCode: 500,
+        timestamp,
+      };
+  }
 }
 
-// Utility function for consistent success responses
-export function createSuccessResponse(
-  data?: any,
-  message?: string,
-  statusCode: number = 200
-) {
-  const response: any = {
-    success: true,
+/**
+ * Create a standardized API error response
+ */
+export function createAPIErrorResponse(
+  message: string,
+  statusCode: number = 500,
+  details?: unknown,
+  code?: string | number
+): NextResponse {
+  const errorResponse: APIErrorResponse = {
+    error: message,
+    message: getUserFriendlyMessage(message, statusCode),
+    details,
+    code,
+    statusCode,
     timestamp: new Date().toISOString(),
   };
 
-  if (data !== undefined) {
-    response.data = data;
-  }
-
-  if (message) {
-    response.message = message;
-  }
-
-  return NextResponse.json(response, { status: statusCode });
+  return NextResponse.json(errorResponse, { status: statusCode });
 }
 
-// Utility function for handling async operations with error boundaries
-export async function safeAsync<T>(
-  operation: () => Promise<T>,
-  errorMessage: string = 'Operation failed'
-): Promise<{ data: T | null; error: string | null }> {
-  try {
-    const data = await operation();
-    return { data, error: null };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : errorMessage;
-    console.error(`Safe async operation failed: ${message}`, error);
-    return { data: null, error: message };
-  }
-}
+/**
+ * Get user-friendly message based on error and status code
+ */
+function getUserFriendlyMessage(error: string, statusCode: number): string {
+  // Map common error patterns to user-friendly messages
+  const errorPatterns = [
+    {
+      pattern: /duplicate key|already exists/i,
+      message: 'This item already exists. Please choose a different name.',
+    },
+    {
+      pattern: /foreign key|referenced by/i,
+      message: 'This item cannot be deleted because it is being used elsewhere.',
+    },
+    {
+      pattern: /not found|does not exist/i,
+      message: 'The requested item could not be found.',
+    },
+    {
+      pattern: /permission denied|insufficient privilege/i,
+      message: 'You do not have permission to perform this action.',
+    },
+    {
+      pattern: /validation|invalid/i,
+      message: 'The provided information is not valid. Please check your input.',
+    },
+  ];
 
-// Utility for retrying operations
-export async function withRetry<T>(
-  operation: () => Promise<T>,
-  maxRetries: number = 3,
-  delayMs: number = 1000
-): Promise<T> {
-  let lastError: Error;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error('Unknown error');
-
-      if (attempt === maxRetries) {
-        throw lastError;
-      }
-
-      // Exponential backoff
-      const delay = delayMs * Math.pow(2, attempt - 1);
-      await new Promise((resolve) => setTimeout(resolve, delay));
+  for (const { pattern, message } of errorPatterns) {
+    if (pattern.test(error)) {
+      return message;
     }
   }
 
-  throw lastError!;
+  // Default messages based on status code
+  switch (statusCode) {
+    case 400:
+      return 'The request contains invalid data. Please check your input.';
+    case 401:
+      return 'You need to log in to perform this action.';
+    case 403:
+      return 'You do not have permission to perform this action.';
+    case 404:
+      return 'The requested resource was not found.';
+    case 409:
+      return 'This action conflicts with existing data.';
+    case 422:
+      return 'The provided data could not be processed.';
+    case 500:
+      return 'An internal server error occurred. Please try again.';
+    case 503:
+      return 'The service is temporarily unavailable. Please try again later.';
+    default:
+      return 'An unexpected error occurred. Please try again.';
+  }
+}
+
+/**
+ * Handle validation errors
+ */
+export function handleValidationError(
+  errors: Record<string, string[]>
+): NextResponse {
+  return NextResponse.json(
+    {
+      error: 'Validation failed',
+      message: 'The provided data is invalid',
+      details: errors,
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    },
+    { status: 400 }
+  );
+}
+
+/**
+ * Handle authentication errors
+ */
+export function handleAuthError(message: string = 'Authentication required'): NextResponse {
+  return NextResponse.json(
+    {
+      error: 'Authentication failed',
+      message,
+      statusCode: 401,
+      timestamp: new Date().toISOString(),
+    },
+    { status: 401 }
+  );
+}
+
+/**
+ * Handle authorization errors
+ */
+export function handleAuthorizationError(message: string = 'Access denied'): NextResponse {
+  return NextResponse.json(
+    {
+      error: 'Authorization failed',
+      message,
+      statusCode: 403,
+      timestamp: new Date().toISOString(),
+    },
+    { status: 403 }
+  );
 }

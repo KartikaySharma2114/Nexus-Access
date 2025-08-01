@@ -6,6 +6,8 @@ import { Role, Permission, RolePermission } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { LoadingState } from '@/components/ui/loading';
+import { useToast } from '@/components/ui/toast';
 import { Loader2, Check, X } from 'lucide-react';
 
 interface AssociationMatrixProps {
@@ -29,6 +31,7 @@ export function AssociationMatrix({ className }: AssociationMatrixProps) {
   const [updatingAssociation, setUpdatingAssociation] = useState<string | null>(
     null
   );
+  const { addToast } = useToast();
 
   useEffect(() => {
     loadData();
