@@ -49,18 +49,20 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    // Protect dashboard routes
-    if (request.nextUrl.pathname.startsWith('/dashboard')) {
-      if (!session) {
-        const redirectUrl = new URL('/login', request.url);
-        redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
-        return NextResponse.redirect(redirectUrl);
-      }
+    // Protect main app routes (except auth routes)
+    const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || 
+                       request.nextUrl.pathname.startsWith('/signup');
+    const isPublicRoute = request.nextUrl.pathname === '/' && !session;
+    
+    if (!isAuthRoute && !session && request.nextUrl.pathname !== '/') {
+      const redirectUrl = new URL('/login', request.url);
+      redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // Redirect authenticated users away from login page
-    if (request.nextUrl.pathname === '/login' && session) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+    // Redirect authenticated users away from auth pages
+    if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && session) {
+      return NextResponse.redirect(new URL('/', request.url));
     }
 
     return response;

@@ -54,17 +54,48 @@ export async function GET() {
       });
     }
 
+    // Format recent activity to match the expected interface
+    const recentActivity: Array<{
+      id: string;
+      type: 'role_created' | 'permission_created' | 'association_created' | 'association_deleted';
+      description: string;
+      timestamp: string;
+    }> = [];
+    
+    // Add recent permissions
+    if (recentPermissions) {
+      recentPermissions.forEach(permission => {
+        recentActivity.push({
+          id: `permission_${permission.id}`,
+          type: 'permission_created' as const,
+          description: `Permission "${permission.name}" was created`,
+          timestamp: permission.created_at,
+        });
+      });
+    }
+    
+    // Add recent roles
+    if (recentRoles) {
+      recentRoles.forEach(role => {
+        recentActivity.push({
+          id: `role_${role.id}`,
+          type: 'role_created' as const,
+          description: `Role "${role.name}" was created`,
+          timestamp: role.created_at,
+        });
+      });
+    }
+    
+    // Sort by timestamp (most recent first) and limit to 10
+    recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const limitedActivity = recentActivity.slice(0, 10);
+
     return NextResponse.json({
       data: {
-        counts: {
-          permissions: permissionsCount || 0,
-          roles: rolesCount || 0,
-          associations: associationsCount || 0,
-        },
-        recentActivity: {
-          permissions: recentPermissions || [],
-          roles: recentRoles || [],
-        },
+        totalPermissions: permissionsCount || 0,
+        totalRoles: rolesCount || 0,
+        totalAssociations: associationsCount || 0,
+        recentActivity: limitedActivity,
       },
     });
   } catch (error) {

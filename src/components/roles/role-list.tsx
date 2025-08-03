@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/loading';
 import { SearchBar } from '@/components/ui/search-input';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
 import { RoleForm } from './role-form';
 import { DeleteRoleDialog } from './delete-role-dialog';
 import { createClient } from '@/lib/supabase/client';
@@ -33,7 +33,7 @@ export function RoleList({ className }: RoleListProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { addToast } = useToast();
+  const { toast } = useToast();
 
   const supabase = createClient();
 
@@ -60,7 +60,7 @@ export function RoleList({ className }: RoleListProps) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to fetch roles';
       setError(errorMessage);
-      addToast({
+      toast({
         title: 'Error',
         description: errorMessage,
         variant: 'destructive',

@@ -63,6 +63,13 @@ lerna-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# test artifacts
+/test-results/
+/playwright-report/
+/playwright/.cache/
+coverage/
+*.lcov
+
 # IDE and editor files
 .vscode/settings.json
 .vscode/launch.json

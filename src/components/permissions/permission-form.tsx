@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 // import { ErrorDisplay } from '@/components/common/error-display';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { createPermissionSchema } from '@/lib/validations';
 import type { Permission } from '@/lib/types';
@@ -54,7 +54,7 @@ export function PermissionForm({
   const [success, setSuccess] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
-  const { addToast } = useToast();
+  const { toast } = useToast();
 
   const isEditing = !!permission;
 
@@ -160,7 +160,7 @@ export function PermissionForm({
         result.message ||
         `Permission ${isEditing ? 'updated' : 'created'} successfully`;
 
-      addToast({
+      toast({
         title: 'Success',
         description: successMessage,
         variant: 'success',

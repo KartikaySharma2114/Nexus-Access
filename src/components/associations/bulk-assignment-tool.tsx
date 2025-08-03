@@ -224,13 +224,13 @@ export function BulkAssignmentTool({ className }: BulkAssignmentToolProps) {
       <Card>
         <CardHeader>
           <CardTitle>Bulk Permission Assignment</CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Select a role and multiple permissions to assign or unassign in bulk
           </p>
         </CardHeader>
         <CardContent>
           {roles.length === 0 ? (
-            <p className="text-gray-500">No roles available</p>
+            <p className="text-muted-foreground">No roles available</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {roles.map((role) => (
@@ -260,7 +260,7 @@ export function BulkAssignmentTool({ className }: BulkAssignmentToolProps) {
             </CardTitle>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Search className="h-4 w-4 text-gray-400" />
+                <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search permissions..."
                   value={searchQuery}
@@ -294,7 +294,7 @@ export function BulkAssignmentTool({ className }: BulkAssignmentToolProps) {
           </CardHeader>
           <CardContent>
             {filteredPermissions.length === 0 ? (
-              <p className="text-gray-500">
+              <p className="text-muted-foreground">
                 {searchQuery
                   ? 'No permissions match your search'
                   : 'No permissions available'}
@@ -311,10 +311,10 @@ export function BulkAssignmentTool({ className }: BulkAssignmentToolProps) {
                   return (
                     <div
                       key={permission.id}
-                      className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                      className={`flex items-center justify-between p-3 border border-border rounded-lg cursor-pointer transition-colors ${
                         isSelected
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'hover:bg-gray-50'
+                          ? 'border-primary bg-primary/10 dark:bg-primary/20'
+                          : 'hover:bg-muted/80 dark:hover:bg-muted/20'
                       }`}
                       onClick={() => handlePermissionToggle(permission.id)}
                     >
@@ -322,17 +322,17 @@ export function BulkAssignmentTool({ className }: BulkAssignmentToolProps) {
                         <div
                           className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
                             isSelected
-                              ? 'border-blue-500 bg-blue-500'
-                              : 'border-gray-300'
+                              ? 'border-primary bg-primary'
+                              : 'border-muted-foreground/50 dark:border-muted-foreground/70'
                           }`}
                         >
                           {isSelected && (
-                            <Check className="h-3 w-3 text-white" />
+                            <Check className="h-3 w-3 text-primary-foreground" />
                           )}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{permission.name}</h4>
+                            <h4 className="font-medium text-foreground">{permission.name}</h4>
                             {isAssigned && (
                               <Badge variant="default" className="text-xs">
                                 Currently Assigned
@@ -340,7 +340,7 @@ export function BulkAssignmentTool({ className }: BulkAssignmentToolProps) {
                             )}
                           </div>
                           {permission.description && (
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-muted-foreground mt-1">
                               {permission.description}
                             </p>
                           )}
@@ -354,9 +354,9 @@ export function BulkAssignmentTool({ className }: BulkAssignmentToolProps) {
 
             {/* Bulk Actions */}
             {selectedPermissions.size > 0 && (
-              <div className="mt-4 pt-4 border-t">
+              <div className="mt-4 pt-4 border-t border-border">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {selectedPermissions.size} permissions selected
                   </p>
                   <div className="flex gap-2">

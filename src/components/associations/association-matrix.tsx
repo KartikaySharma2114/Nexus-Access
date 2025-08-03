@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/ui/loading';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2, Check, X } from 'lucide-react';
 
 interface AssociationMatrixProps {
@@ -31,7 +31,7 @@ export function AssociationMatrix({ className }: AssociationMatrixProps) {
   const [updatingAssociation, setUpdatingAssociation] = useState<string | null>(
     null
   );
-  const { addToast } = useToast();
+  const { toast } = useToast();
 
   useEffect(() => {
     loadData();
@@ -173,13 +173,13 @@ export function AssociationMatrix({ className }: AssociationMatrixProps) {
     <Card className={className}>
       <CardHeader>
         <CardTitle>Role-Permission Association Matrix</CardTitle>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Click on cells to toggle associations between roles and permissions
         </p>
       </CardHeader>
       <CardContent>
         {data.roles.length === 0 || data.permissions.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             <p>No roles or permissions found.</p>
             <p className="text-sm">Create some roles and permissions first.</p>
           </div>
@@ -188,13 +188,13 @@ export function AssociationMatrix({ className }: AssociationMatrixProps) {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="border p-2 bg-gray-50 text-left font-medium">
+                  <th className="border border-border p-2 bg-muted text-left font-medium text-foreground">
                     Role / Permission
                   </th>
                   {data.permissions.map((permission) => (
                     <th
                       key={permission.id}
-                      className="border p-2 bg-gray-50 text-center font-medium min-w-[120px]"
+                      className="border border-border p-2 bg-muted text-center font-medium min-w-[120px] text-foreground"
                       title={permission.description || permission.name}
                     >
                       <div className="truncate">{permission.name}</div>
@@ -205,7 +205,7 @@ export function AssociationMatrix({ className }: AssociationMatrixProps) {
               <tbody>
                 {data.roles.map((role) => (
                   <tr key={role.id}>
-                    <td className="border p-2 bg-gray-50 font-medium">
+                    <td className="border border-border p-2 bg-muted font-medium text-foreground">
                       {role.name}
                     </td>
                     {data.permissions.map((permission) => {
@@ -219,7 +219,7 @@ export function AssociationMatrix({ className }: AssociationMatrixProps) {
                       return (
                         <td
                           key={permission.id}
-                          className="border p-1 text-center"
+                          className="border border-border p-1 text-center"
                         >
                           <Button
                             variant={isAssociated ? 'default' : 'outline'}
@@ -236,11 +236,11 @@ export function AssociationMatrix({ className }: AssociationMatrixProps) {
                             }
                           >
                             {isUpdating ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <Loader2 className="h-4 w-4 animate-spin" />
                             ) : isAssociated ? (
-                              <Check className="h-3 w-3" />
+                              <Check className="h-4 w-4" />
                             ) : (
-                              <X className="h-3 w-3 opacity-30" />
+                              <X className="h-4 w-4 opacity-30" />
                             )}
                           </Button>
                         </td>
@@ -254,16 +254,16 @@ export function AssociationMatrix({ className }: AssociationMatrixProps) {
         )}
 
         {/* Summary */}
-        <div className="mt-4 flex gap-4 text-sm text-gray-600">
+        <div className="mt-4 flex gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Badge variant="default" className="w-4 h-4 p-0">
-              <Check className="h-2 w-2" />
+            <Badge variant="default" className="w-6 h-6 p-0 flex items-center justify-center">
+              <Check className="h-4 w-4" />
             </Badge>
             <span>Associated</span>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="w-4 h-4 p-0">
-              <X className="h-2 w-2 opacity-30" />
+            <Badge variant="outline" className="w-6 h-6 p-0 flex items-center justify-center">
+              <X className="h-4 w-4 opacity-30" />
             </Badge>
             <span>Not Associated</span>
           </div>

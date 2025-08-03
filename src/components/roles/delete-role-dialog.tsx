@@ -81,23 +81,23 @@ export function DeleteRoleDialog({
 
         {/* Error Display */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded">
             {error}
           </div>
         )}
 
         {/* Role Details */}
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-muted/50 p-4 rounded-lg">
           <div className="space-y-2">
             <div>
-              <span className="font-medium text-sm text-gray-600">Name:</span>
-              <div className="text-sm">{role.name}</div>
+              <span className="font-medium text-sm text-muted-foreground">Name:</span>
+              <div className="text-sm text-foreground">{role.name}</div>
             </div>
             <div>
-              <span className="font-medium text-sm text-gray-600">
+              <span className="font-medium text-sm text-muted-foreground">
                 Created:
               </span>
-              <div className="text-sm">
+              <div className="text-sm text-foreground">
                 {new Date(role.created_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
@@ -111,10 +111,10 @@ export function DeleteRoleDialog({
         </div>
 
         {/* Warning about cascade deletion */}
-        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+        <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-4 rounded-lg">
           <div className="flex items-start space-x-2">
-            <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-yellow-800">
+            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-yellow-800 dark:text-yellow-200">
               <div className="font-medium mb-1">Cascade Effects:</div>
               <ul className="list-disc list-inside space-y-1 text-xs">
                 <li>All permission associations will be removed</li>

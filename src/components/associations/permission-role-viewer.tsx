@@ -134,7 +134,7 @@ export function PermissionRoleViewer({
         <CardHeader>
           <CardTitle>Select Permission</CardTitle>
           <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-gray-400" />
+            <Search className="h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search permissions..."
               value={searchQuery}
@@ -145,7 +145,7 @@ export function PermissionRoleViewer({
         </CardHeader>
         <CardContent>
           {filteredPermissions.length === 0 ? (
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               {searchQuery
                 ? 'No permissions match your search'
                 : 'No permissions available'}
@@ -159,24 +159,24 @@ export function PermissionRoleViewer({
                 return (
                   <div
                     key={permission.id}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    className={`p-3 border border-border rounded-lg cursor-pointer transition-colors ${
                       isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'hover:bg-gray-50'
+                        ? 'border-primary bg-primary/10 dark:bg-primary/20'
+                        : 'hover:bg-muted/80 dark:hover:bg-muted/20'
                     }`}
                     onClick={() => handlePermissionSelect(permission)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{permission.name}</h4>
+                          <h4 className="font-medium text-foreground">{permission.name}</h4>
                           <Badge variant="secondary" className="text-xs">
                             <Users className="h-3 w-3 mr-1" />
                             {roleCount} roles
                           </Badge>
                         </div>
                         {permission.description && (
-                          <p className="text-sm text-gray-600 mt-1">
+                          <p className="text-sm text-muted-foreground mt-1">
                             {permission.description}
                           </p>
                         )}
@@ -198,7 +198,7 @@ export function PermissionRoleViewer({
               Roles with &quot;{currentPermission.name}&quot; Permission
             </CardTitle>
             {currentPermission.description && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {currentPermission.description}
               </p>
             )}
@@ -210,11 +210,11 @@ export function PermissionRoleViewer({
               if (permissionRoles.length === 0) {
                 return (
                   <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">
+                    <Users className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground">
                       No roles have this permission assigned
                     </p>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-sm text-muted-foreground/70 mt-1">
                       Use the Role Permission Assigner to assign this permission
                       to roles
                     </p>
@@ -227,26 +227,26 @@ export function PermissionRoleViewer({
                   {permissionRoles.map((role) => (
                     <div
                       key={role.id}
-                      className="flex items-center justify-between p-3 border rounded-lg bg-green-50 border-green-200"
+                      className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800"
                     >
                       <div>
-                        <h4 className="font-medium text-green-800">
+                        <h4 className="font-medium text-green-800 dark:text-green-200">
                           {role.name}
                         </h4>
-                        <p className="text-sm text-green-600">
+                        <p className="text-sm text-green-600 dark:text-green-400">
                           Created{' '}
                           {new Date(role.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge variant="default" className="bg-green-600">
+                      <Badge variant="default" className="bg-green-600 dark:bg-green-700">
                         Assigned
                       </Badge>
                     </div>
                   ))}
 
                   {/* Summary */}
-                  <div className="mt-4 pt-4 border-t">
-                    <p className="text-sm text-gray-600">
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-sm text-muted-foreground">
                       This permission is assigned to {permissionRoles.length} of{' '}
                       {roles.length} total roles
                     </p>
@@ -265,29 +265,29 @@ export function PermissionRoleViewer({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {permissions.length}
               </div>
-              <div className="text-sm text-blue-600">Total Permissions</div>
+              <div className="text-sm text-blue-600 dark:text-blue-400">Total Permissions</div>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {
                   permissions.filter((p) => getPermissionRoleCount(p.id) > 0)
                     .length
                 }
               </div>
-              <div className="text-sm text-green-600">Assigned Permissions</div>
+              <div className="text-sm text-green-600 dark:text-green-400">Assigned Permissions</div>
             </div>
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">
+            <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                 {
                   permissions.filter((p) => getPermissionRoleCount(p.id) === 0)
                     .length
                 }
               </div>
-              <div className="text-sm text-orange-600">
+              <div className="text-sm text-orange-600 dark:text-orange-400">
                 Unassigned Permissions
               </div>
             </div>

@@ -32,6 +32,7 @@ import {
   User,
   LogOut,
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 const navigationItems = [
   {
@@ -184,7 +185,8 @@ export function MainNavigation() {
               <span className="font-bold">RBAC Tool</span>
             </Link>
           </div>
-          <nav className="flex items-center">
+          <nav className="flex items-center space-x-2">
+            <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

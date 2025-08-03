@@ -3,6 +3,8 @@
  */
 
 import { NextResponse } from 'next/server';
+import { ErrorHandler, type ErrorContext } from './error-utils';
+import { getErrorLogger } from './error-logger';
 
 export interface APIErrorResponse {
   error: string;
@@ -22,67 +24,157 @@ export interface DatabaseErrorInfo {
 }
 
 /**
+ * Enhanced database error mapping with more comprehensive coverage
+ */
+const DATABASE_ERROR_MAPPINGS: Record<string, { message: string; statusCode: number; userMessage: string }> = {
+  // Constraint violations
+  '23505': {
+    message: 'Duplicate entry',
+    statusCode: 409,
+    userMessage: 'A record with this information already exists. Please use different values.',
+  },
+  '23503': {
+    message: 'Reference constraint violation',
+    statusCode: 409,
+    userMessage: 'Cannot delete this record because it is being used by other records.',
+  },
+  '23502': {
+    message: 'Not null violation',
+    statusCode: 400,
+    userMessage: 'Required information is missing. Please fill in all required fields.',
+  },
+  '23514': {
+    message: 'Check constraint violation',
+    statusCode: 400,
+    userMessage: 'The provided data does not meet the required criteria.',
+  },
+  
+  // Permission errors
+  '42501': {
+    message: 'Insufficient privilege',
+    statusCode: 403,
+    userMessage: 'You do not have permission to perform this action.',
+  },
+  '42601': {
+    message: 'Syntax error',
+    statusCode: 500,
+    userMessage: 'A system error occurred. Please try again or contact support.',
+  },
+  
+  // Connection and system errors
+  '08000': {
+    message: 'Connection exception',
+    statusCode: 503,
+    userMessage: 'Database connection failed. Please try again in a moment.',
+  },
+  '08003': {
+    message: 'Connection does not exist',
+    statusCode: 503,
+    userMessage: 'Database connection lost. Please refresh the page and try again.',
+  },
+  '08006': {
+    message: 'Connection failure',
+    statusCode: 503,
+    userMessage: 'Unable to connect to the database. Please try again later.',
+  },
+  
+  // PostgREST specific errors
+  'PGRST116': {
+    message: 'Not found',
+    statusCode: 404,
+    userMessage: 'The requested record was not found.',
+  },
+  'PGRST301': {
+    message: 'Parsing error',
+    statusCode: 400,
+    userMessage: 'Invalid request format. Please check your input.',
+  },
+  'PGRST302': {
+    message: 'Invalid range',
+    statusCode: 400,
+    userMessage: 'Invalid data range specified.',
+  },
+  
+  // Supabase specific errors
+  'SUPABASE_AUTH_ERROR': {
+    message: 'Authentication error',
+    statusCode: 401,
+    userMessage: 'Authentication failed. Please log in again.',
+  },
+  'SUPABASE_PERMISSION_ERROR': {
+    message: 'Permission denied',
+    statusCode: 403,
+    userMessage: 'You do not have permission to access this resource.',
+  },
+};
+
+/**
  * Handle database errors and convert to user-friendly messages
  */
-export function handleDatabaseError(error: DatabaseErrorInfo): APIErrorResponse {
+export function _handleDatabaseError(
+  error: DatabaseErrorInfo
+): APIErrorResponse {
   const timestamp = new Date().toISOString();
+  const errorCode = error.code || 'UNKNOWN';
   
-  // Provide user-friendly error messages for common database errors
-  switch (error.code) {
-    case '23505': // unique_violation
-      return {
-        error: 'Duplicate entry',
-        message: 'A record with this information already exists',
-        details: error.details,
-        code: error.code,
-        statusCode: 409,
-        timestamp,
-      };
-    case '23503': // foreign_key_violation
-      return {
-        error: 'Reference constraint violation',
-        message: 'Cannot delete this record because it is referenced by other records',
-        details: error.details,
-        code: error.code,
-        statusCode: 409,
-        timestamp,
-      };
-    case '42501': // insufficient_privilege
-      return {
-        error: 'Access denied',
-        message: 'You do not have permission to perform this action',
-        details: error.details,
-        code: error.code,
-        statusCode: 403,
-        timestamp,
-      };
-    case 'PGRST116': // not_found
-      return {
-        error: 'Not found',
-        message: 'The requested record was not found',
-        details: error.details,
-        code: error.code,
-        statusCode: 404,
-        timestamp,
-      };
-    default:
-      return {
-        error: 'Database error',
-        message: error.message || 'An unexpected database error occurred',
-        details: error.details,
-        code: error.code,
-        statusCode: 500,
-        timestamp,
-      };
+  // Get mapping for known error codes
+  const mapping = DATABASE_ERROR_MAPPINGS[errorCode];
+  
+  if (mapping) {
+    return {
+      error: mapping.message,
+      message: mapping.userMessage,
+      details: error.details,
+      code: error.code,
+      statusCode: mapping.statusCode,
+      timestamp,
+    };
   }
+
+  // Handle unknown database errors
+  return {
+    error: 'Database error',
+    message: error.message || 'An unexpected database error occurred. Please try again or contact support.',
+    details: error.details,
+    code: error.code,
+    statusCode: 500,
+    timestamp,
+  };
 }
 
 /**
- * Create a standardized API error response
+ * Create a standardized API error response with centralized error handling
  */
 export function createAPIErrorResponse(
+  error: unknown,
+  statusCode?: number,
+  context?: ErrorContext
+): NextResponse {
+  const errorHandler = ErrorHandler.getInstance();
+  const structuredError = errorHandler.handleErrorSync(error, context);
+  
+  const errorResponse: APIErrorResponse = {
+    error: structuredError.message,
+    message: structuredError.userMessage,
+    details: structuredError.details,
+    code: structuredError.code,
+    statusCode: statusCode || structuredError.statusCode || 500,
+    timestamp: structuredError.timestamp,
+    path: context?.url,
+  };
+
+  return NextResponse.json(errorResponse, { 
+    status: errorResponse.statusCode 
+  });
+}
+
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use createAPIErrorResponse with error object instead
+ */
+export function createLegacyAPIErrorResponse(
   message: string,
-  statusCode: number = 500,
+  statusCode = 500,
   details?: unknown,
   code?: string | number
 ): NextResponse {
@@ -110,7 +202,8 @@ function getUserFriendlyMessage(error: string, statusCode: number): string {
     },
     {
       pattern: /foreign key|referenced by/i,
-      message: 'This item cannot be deleted because it is being used elsewhere.',
+      message:
+        'This item cannot be deleted because it is being used elsewhere.',
     },
     {
       pattern: /not found|does not exist/i,
@@ -122,7 +215,8 @@ function getUserFriendlyMessage(error: string, statusCode: number): string {
     },
     {
       pattern: /validation|invalid/i,
-      message: 'The provided information is not valid. Please check your input.',
+      message:
+        'The provided information is not valid. Please check your input.',
     },
   ];
 
@@ -156,49 +250,94 @@ function getUserFriendlyMessage(error: string, statusCode: number): string {
 }
 
 /**
- * Handle validation errors
+ * Handle validation errors with centralized error handling
  */
 export function handleValidationError(
-  errors: Record<string, string[]>
+  errors: Record<string, string[]> | string,
+  context?: ErrorContext
 ): NextResponse {
+  const errorHandler = ErrorHandler.getInstance();
+  const validationError = errorHandler.handleValidationError(errors, context);
+  
   return NextResponse.json(
     {
-      error: 'Validation failed',
-      message: 'The provided data is invalid',
-      details: errors,
+      error: validationError.message,
+      message: validationError.userMessage,
+      details: validationError.details,
       statusCode: 400,
-      timestamp: new Date().toISOString(),
+      timestamp: validationError.timestamp,
     },
     { status: 400 }
   );
 }
 
 /**
- * Handle authentication errors
+ * Handle authentication errors with centralized error handling
  */
-export function handleAuthError(message: string = 'Authentication required'): NextResponse {
-  return NextResponse.json(
-    {
-      error: 'Authentication failed',
-      message,
-      statusCode: 401,
-      timestamp: new Date().toISOString(),
-    },
-    { status: 401 }
-  );
+export function handleAuthError(
+  message = 'Authentication required',
+  context?: ErrorContext
+): NextResponse {
+  const authError = {
+    name: 'AuthenticationError',
+    message,
+    statusCode: 401,
+  };
+  
+  return createAPIErrorResponse(authError, 401, context);
 }
 
 /**
- * Handle authorization errors
+ * Handle authorization errors with centralized error handling
  */
-export function handleAuthorizationError(message: string = 'Access denied'): NextResponse {
+export function handleAuthorizationError(
+  message = 'Access denied',
+  context?: ErrorContext
+): NextResponse {
+  const authzError = {
+    name: 'AuthorizationError',
+    message,
+    statusCode: 403,
+  };
+  
+  return createAPIErrorResponse(authzError, 403, context);
+}
+
+/**
+ * Handle database errors with centralized error handling
+ */
+export function handleDatabaseError(
+  error: DatabaseErrorInfo,
+  context?: ErrorContext
+): NextResponse {
+  const dbError = {
+    name: 'DatabaseError',
+    message: error.message,
+    code: error.code,
+    details: error.details,
+  };
+  
+  return createAPIErrorResponse(dbError, undefined, context);
+}
+
+/**
+ * Handle network errors with centralized error handling
+ */
+export function handleNetworkError(
+  error: unknown,
+  context?: ErrorContext
+): NextResponse {
+  const errorHandler = ErrorHandler.getInstance();
+  const networkError = errorHandler.handleNetworkError(error, context);
+  
   return NextResponse.json(
     {
-      error: 'Authorization failed',
-      message,
-      statusCode: 403,
-      timestamp: new Date().toISOString(),
+      error: networkError.message,
+      message: networkError.userMessage,
+      details: networkError.details,
+      statusCode: networkError.statusCode || 503,
+      timestamp: networkError.timestamp,
     },
-    { status: 403 }
+    { status: networkError.statusCode || 503 }
   );
 }

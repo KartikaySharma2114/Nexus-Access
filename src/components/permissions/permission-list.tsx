@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingState, LoadingSpinner } from '@/components/ui/loading';
 import { SearchBar } from '@/components/ui/search-input';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
 import { PermissionForm } from './permission-form';
 import { DeletePermissionDialog } from './delete-permission-dialog';
 import { createClient } from '@/lib/supabase/client';
@@ -34,7 +34,7 @@ export function PermissionList({ className }: PermissionListProps) {
   const [selectedPermission, setSelectedPermission] =
     useState<Permission | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { addToast } = useToast();
+  const { toast } = useToast();
 
   const supabase = createClient();
 
@@ -61,7 +61,7 @@ export function PermissionList({ className }: PermissionListProps) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to fetch permissions';
       setError(errorMessage);
-      addToast({
+      toast({
         title: 'Error',
         description: errorMessage,
         variant: 'destructive',

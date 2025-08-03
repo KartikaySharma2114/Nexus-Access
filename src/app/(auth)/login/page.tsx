@@ -1,17 +1,18 @@
+import { LoginForm } from '@/components/auth/login-form';
+
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to RBAC Tool
-          </h2>
-        </div>
-        <div className="bg-white p-8 rounded-lg shadow">
-          <p className="text-center text-gray-600">
-            Please use Supabase Auth UI or implement login form
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-foreground">
+            RBAC Configuration Tool
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Role-Based Access Control Management
           </p>
         </div>
+        <LoginForm />
       </div>
     </div>
   );

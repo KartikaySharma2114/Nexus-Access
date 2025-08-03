@@ -199,7 +199,7 @@ export function RolePermissionAssigner({
         </CardHeader>
         <CardContent>
           {roles.length === 0 ? (
-            <p className="text-gray-500">No roles available</p>
+            <p className="text-muted-foreground">No roles available</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {roles.map((role) => (
@@ -228,7 +228,7 @@ export function RolePermissionAssigner({
               Assign Permissions to &quot;{currentRole.name}&quot;
             </CardTitle>
             <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-gray-400" />
+              <Search className="h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search permissions..."
                 value={searchQuery}
@@ -239,7 +239,7 @@ export function RolePermissionAssigner({
           </CardHeader>
           <CardContent>
             {filteredPermissions.length === 0 ? (
-              <p className="text-gray-500">
+              <p className="text-muted-foreground">
                 {searchQuery
                   ? 'No permissions match your search'
                   : 'No permissions available'}
@@ -256,11 +256,11 @@ export function RolePermissionAssigner({
                   return (
                     <div
                       key={permission.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/80 dark:hover:bg-muted/20 transition-colors"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{permission.name}</h4>
+                          <h4 className="font-medium text-foreground">{permission.name}</h4>
                           {isAssigned && (
                             <Badge variant="default" className="text-xs">
                               Assigned
@@ -268,7 +268,7 @@ export function RolePermissionAssigner({
                           )}
                         </div>
                         {permission.description && (
-                          <p className="text-sm text-gray-600 mt-1">
+                          <p className="text-sm text-muted-foreground mt-1">
                             {permission.description}
                           </p>
                         )}
@@ -301,8 +301,8 @@ export function RolePermissionAssigner({
             )}
 
             {/* Summary */}
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-sm text-gray-600">
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground">
                 {getRolePermissions(currentRole.id).length} of{' '}
                 {permissions.length} permissions assigned
               </p>

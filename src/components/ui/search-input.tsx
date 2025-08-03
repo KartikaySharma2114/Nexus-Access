@@ -107,7 +107,7 @@ export function SearchBar({
               <span>Searching...</span>
             ) : value ? (
               <span>
-                {resultCount} result{resultCount !== 1 ? 's' : ''} for "{value}"
+                {resultCount} result{resultCount !== 1 ? 's' : ''} for &quot;{value}&quot;
               </span>
             ) : (
               <span>Enter a search term to filter results</span>

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Loader2, AlertTriangle, Users } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import type { Permission } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import type { Permission, Role } from '@/lib/types';
 
 interface DeletePermissionDialogProps {
   isOpen: boolean;
@@ -28,6 +29,49 @@ export function DeletePermissionDialog({
 }: DeletePermissionDialogProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [associatedRoles, setAssociatedRoles] = useState<Role[]>([]);
+  const [checkingRoles, setCheckingRoles] = useState(false);
+
+  // Check for associated roles when dialog opens
+  useEffect(() => {
+    if (isOpen && permission) {
+      checkAssociatedRoles();
+    }
+  }, [isOpen, permission]);
+
+  const checkAssociatedRoles = async () => {
+    if (!permission) return;
+
+    try {
+      setCheckingRoles(true);
+      
+      // Get role associations for this permission
+      const associationsResponse = await fetch('/api/associations');
+      const associationsData = await associationsResponse.json();
+      
+      if (associationsResponse.ok) {
+        const permissionAssociations = associationsData.data.filter(
+          (assoc: any) => assoc.permission_id === permission.id
+        );
+        
+        if (permissionAssociations.length > 0) {
+          // Get role details
+          const rolesResponse = await fetch('/api/roles');
+          const rolesData = await rolesResponse.json();
+          
+          if (rolesResponse.ok) {
+            const roleIds = permissionAssociations.map((assoc: any) => assoc.role_id);
+            const roles = rolesData.data.filter((role: Role) => roleIds.includes(role.id));
+            setAssociatedRoles(roles);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error checking associated roles:', err);
+    } finally {
+      setCheckingRoles(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!permission) return;
@@ -60,6 +104,7 @@ export function DeletePermissionDialog({
   const handleClose = () => {
     if (!loading) {
       setError(null);
+      setAssociatedRoles([]);
       onClose();
     }
   };
@@ -83,31 +128,31 @@ export function DeletePermissionDialog({
 
         {/* Error Display */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded">
             {error}
           </div>
         )}
 
         {/* Permission Details */}
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-muted/50 p-4 rounded-lg">
           <div className="space-y-2">
             <div>
-              <span className="font-medium text-sm text-gray-600">Name:</span>
-              <div className="text-sm">{permission.name}</div>
+              <span className="font-medium text-sm text-muted-foreground">Name:</span>
+              <div className="text-sm text-foreground">{permission.name}</div>
             </div>
             {permission.description && (
               <div>
-                <span className="font-medium text-sm text-gray-600">
+                <span className="font-medium text-sm text-muted-foreground">
                   Description:
                 </span>
-                <div className="text-sm">{permission.description}</div>
+                <div className="text-sm text-foreground">{permission.description}</div>
               </div>
             )}
             <div>
-              <span className="font-medium text-sm text-gray-600">
+              <span className="font-medium text-sm text-muted-foreground">
                 Created:
               </span>
-              <div className="text-sm">
+              <div className="text-sm text-foreground">
                 {new Date(permission.created_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
@@ -119,6 +164,47 @@ export function DeletePermissionDialog({
             </div>
           </div>
         </div>
+
+        {/* Show associated roles if any */}
+        {checkingRoles ? (
+          <div className="bg-muted/30 p-4 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm text-muted-foreground">Checking role associations...</span>
+            </div>
+          </div>
+        ) : associatedRoles.length > 0 ? (
+          <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 p-4 rounded-lg">
+            <div className="flex items-start space-x-2">
+              <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
+                  Cannot Delete - Permission In Use
+                </div>
+                <div className="text-sm text-orange-700 dark:text-orange-300 mb-3">
+                  This permission is currently assigned to the following roles. Remove all role assignments first:
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {associatedRoles.map((role) => (
+                    <Badge key={role.id} variant="outline" className="text-xs">
+                      <Users className="h-3 w-3 mr-1" />
+                      {role.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-4 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <div className="h-4 w-4 bg-green-500 rounded-full flex-shrink-0"></div>
+              <span className="text-sm text-green-800 dark:text-green-200">
+                This permission is not assigned to any roles and can be safely deleted.
+              </span>
+            </div>
+          </div>
+        )}
 
         <DialogFooter>
           <Button
@@ -133,7 +219,7 @@ export function DeletePermissionDialog({
             type="button"
             variant="destructive"
             onClick={handleDelete}
-            disabled={loading}
+            disabled={loading || associatedRoles.length > 0}
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Delete Permission

@@ -95,7 +95,7 @@ export function handleDatabaseError(error: PostgrestError): DatabaseError {
 
 export function createAPIError(
   message: string,
-  statusCode: number = 500,
+  statusCode = 500,
   details?: unknown,
   code?: string | number
 ): APIError {
@@ -179,7 +179,7 @@ export function getUserFriendlyMessage(
 export function formatAPIResponse(
   data?: unknown,
   message?: string,
-  statusCode: number = 200
+  statusCode = 200
 ) {
   const response: Record<string, unknown> = {
     success: statusCode >= 200 && statusCode < 300,
@@ -200,7 +200,7 @@ export function formatAPIResponse(
 
 export function formatAPIError(
   error: string | Error,
-  statusCode: number = 500,
+  statusCode = 500,
   details?: unknown,
   path?: string
 ): APIError {
