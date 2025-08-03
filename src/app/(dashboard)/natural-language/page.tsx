@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { ErrorBoundary } from '@/components/common/error-boundary';
 // Note: AI service calls are made via API routes to avoid server-side imports in client components
 import { AICommand, AIResponse } from '@/lib/gemini/types';
 
@@ -305,57 +306,67 @@ export default function NaturalLanguagePage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      {/* Header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Wifi className="h-5 w-5 text-green-500" />
-            <span>Natural Language Configuration</span>
-            <Badge variant="default">Active</Badge>
-          </CardTitle>
-          <CardDescription>
-            Configure RBAC settings using plain English commands. Type your
-            commands naturally and let AI interpret them.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+    <ErrorBoundary level="section">
+      <div className="container mx-auto py-8 space-y-6">
+        {/* Header */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Wifi className="h-5 w-5 text-green-500" />
+              <span>Natural Language Configuration</span>
+              <Badge variant="default">Active</Badge>
+            </CardTitle>
+            <CardDescription>
+              Configure RBAC settings using plain English commands. Type your
+              commands naturally and let AI interpret them.
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
-      {/* Input Section */}
-      <NaturalLanguageInput
-        onSubmit={handleCommandSubmit}
-        isLoading={isLoading}
-        suggestions={suggestions}
-        helpText={helpText}
-      />
+        {/* Input Section */}
+        <ErrorBoundary level="component">
+          <NaturalLanguageInput
+            onSubmit={handleCommandSubmit}
+            isLoading={isLoading}
+            suggestions={suggestions}
+            helpText={helpText}
+          />
+        </ErrorBoundary>
 
-      {/* Command Preview */}
-      {currentCommand && (
-        <CommandPreview
-          command={currentCommand}
-          message={currentResponse?.message || ''}
-          onExecute={handleCommandExecute}
-          onCancel={handleCommandCancel}
-          isExecuting={isExecuting}
-          suggestions={currentResponse?.suggestions}
-        />
-      )}
+        {/* Command Preview */}
+        {currentCommand && (
+          <ErrorBoundary level="component">
+            <CommandPreview
+              command={currentCommand}
+              message={currentResponse?.message || ''}
+              onExecute={handleCommandExecute}
+              onCancel={handleCommandCancel}
+              isExecuting={isExecuting}
+              suggestions={currentResponse?.suggestions}
+            />
+          </ErrorBoundary>
+        )}
 
-      {/* AI Response Display */}
-      {currentResponse && !currentCommand && (
-        <AIResponseDisplay
-          response={currentResponse}
-          onRetry={handleRetryResponse}
-          onDismiss={handleDismissResponse}
-        />
-      )}
+        {/* AI Response Display */}
+        {currentResponse && !currentCommand && (
+          <ErrorBoundary level="component">
+            <AIResponseDisplay
+              response={currentResponse}
+              onRetry={handleRetryResponse}
+              onDismiss={handleDismissResponse}
+            />
+          </ErrorBoundary>
+        )}
 
-      {/* Command History */}
-      <CommandHistory
-        history={history}
-        onRetry={handleRetryCommand}
-        onClear={handleClearHistory}
-      />
-    </div>
+        {/* Command History */}
+        <ErrorBoundary level="component">
+          <CommandHistory
+            history={history}
+            onRetry={handleRetryCommand}
+            onClear={handleClearHistory}
+          />
+        </ErrorBoundary>
+      </div>
+    </ErrorBoundary>
   );
 }
