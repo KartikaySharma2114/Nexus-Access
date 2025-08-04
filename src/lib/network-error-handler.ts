@@ -19,7 +19,13 @@ export interface NetworkRequestOptions extends RequestInit {
   retry?: RetryOptions;
   timeout?: number;
   validateResponse?: (response: Response) => boolean;
-  parseResponse?: 'json' | 'text' | 'blob' | 'arrayBuffer' | 'formData' | 'none';
+  parseResponse?:
+    | 'json'
+    | 'text'
+    | 'blob'
+    | 'arrayBuffer'
+    | 'formData'
+    | 'none';
 }
 
 export interface NetworkResponse<T = any> {
@@ -72,7 +78,10 @@ export class NetworkStatusMonitor {
     // Listen for connection changes
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
-      connection.addEventListener('change', this.handleConnectionChange.bind(this));
+      connection.addEventListener(
+        'change',
+        this.handleConnectionChange.bind(this)
+      );
     }
   }
 
@@ -100,7 +109,7 @@ export class NetworkStatusMonitor {
   }
 
   private notifyListeners(isOnline: boolean): void {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(isOnline);
       } catch (error) {
@@ -160,7 +169,10 @@ export class NetworkClient {
   private static instance: NetworkClient;
   private errorHandler: ErrorHandler;
   private networkMonitor: NetworkStatusMonitor;
-  private requestCache: Map<string, { data: any; timestamp: number; ttl: number }> = new Map();
+  private requestCache: Map<
+    string,
+    { data: any; timestamp: number; ttl: number }
+  > = new Map();
 
   private constructor() {
     this.errorHandler = ErrorHandler.getInstance();
@@ -234,7 +246,10 @@ export class NetworkClient {
 
         // Create abort controller for timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), retryOptions.timeout);
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          retryOptions.timeout
+        );
 
         try {
           const response = await fetch(url, {
@@ -273,16 +288,16 @@ export class NetworkClient {
               data = await response.json();
               break;
             case 'text':
-              data = await response.text() as T;
+              data = (await response.text()) as T;
               break;
             case 'blob':
-              data = await response.blob() as T;
+              data = (await response.blob()) as T;
               break;
             case 'arrayBuffer':
-              data = await response.arrayBuffer() as T;
+              data = (await response.arrayBuffer()) as T;
               break;
             case 'formData':
-              data = await response.formData() as T;
+              data = (await response.formData()) as T;
               break;
             case 'none':
               data = undefined as T;
@@ -301,10 +316,9 @@ export class NetworkClient {
             retryCount: attempt,
             totalTime: Date.now() - startTime,
           };
-
         } catch (fetchError) {
           clearTimeout(timeoutId);
-          
+
           if (controller.signal.aborted) {
             throw this.createNetworkError(
               'Request timeout',
@@ -314,10 +328,9 @@ export class NetworkClient {
               attempt
             );
           }
-          
+
           throw fetchError;
         }
-
       } catch (error) {
         lastError = error;
         retryCount = attempt;
@@ -377,14 +390,21 @@ export class NetworkClient {
   /**
    * GET request with retry logic
    */
-  async get<T = any>(url: string, options: Omit<NetworkRequestOptions, 'method'> = {}): Promise<NetworkResponse<T>> {
+  async get<T = any>(
+    url: string,
+    options: Omit<NetworkRequestOptions, 'method'> = {}
+  ): Promise<NetworkResponse<T>> {
     return this.fetch<T>(url, { ...options, method: 'GET' });
   }
 
   /**
    * POST request with retry logic
    */
-  async post<T = any>(url: string, data?: any, options: Omit<NetworkRequestOptions, 'method' | 'body'> = {}): Promise<NetworkResponse<T>> {
+  async post<T = any>(
+    url: string,
+    data?: any,
+    options: Omit<NetworkRequestOptions, 'method' | 'body'> = {}
+  ): Promise<NetworkResponse<T>> {
     return this.fetch<T>(url, {
       ...options,
       method: 'POST',
@@ -399,7 +419,11 @@ export class NetworkClient {
   /**
    * PUT request with retry logic
    */
-  async put<T = any>(url: string, data?: any, options: Omit<NetworkRequestOptions, 'method' | 'body'> = {}): Promise<NetworkResponse<T>> {
+  async put<T = any>(
+    url: string,
+    data?: any,
+    options: Omit<NetworkRequestOptions, 'method' | 'body'> = {}
+  ): Promise<NetworkResponse<T>> {
     return this.fetch<T>(url, {
       ...options,
       method: 'PUT',
@@ -414,14 +438,21 @@ export class NetworkClient {
   /**
    * DELETE request with retry logic
    */
-  async delete<T = any>(url: string, options: Omit<NetworkRequestOptions, 'method'> = {}): Promise<NetworkResponse<T>> {
+  async delete<T = any>(
+    url: string,
+    options: Omit<NetworkRequestOptions, 'method'> = {}
+  ): Promise<NetworkResponse<T>> {
     return this.fetch<T>(url, { ...options, method: 'DELETE' });
   }
 
   /**
    * PATCH request with retry logic
    */
-  async patch<T = any>(url: string, data?: any, options: Omit<NetworkRequestOptions, 'method' | 'body'> = {}): Promise<NetworkResponse<T>> {
+  async patch<T = any>(
+    url: string,
+    data?: any,
+    options: Omit<NetworkRequestOptions, 'method' | 'body'> = {}
+  ): Promise<NetworkResponse<T>> {
     return this.fetch<T>(url, {
       ...options,
       method: 'PATCH',
@@ -439,16 +470,22 @@ export class NetworkClient {
   private defaultRetryCondition(error: unknown, attempt: number): boolean {
     if (error instanceof Error) {
       const networkError = error as NetworkError;
-      
+
       // Don't retry client errors (4xx)
-      if (networkError.status && networkError.status >= 400 && networkError.status < 500) {
+      if (
+        networkError.status &&
+        networkError.status >= 400 &&
+        networkError.status < 500
+      ) {
         return false;
       }
 
       // Retry network errors, timeouts, and server errors
-      return Boolean(networkError.isNetworkError) || 
-             Boolean(networkError.isTimeout) || 
-             Boolean(networkError.status && networkError.status >= 500);
+      return (
+        Boolean(networkError.isNetworkError) ||
+        Boolean(networkError.isTimeout) ||
+        Boolean(networkError.status && networkError.status >= 500)
+      );
     }
 
     return true;
@@ -503,7 +540,7 @@ export class NetworkClient {
    * Delay utility
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -521,11 +558,11 @@ export class NetworkClient {
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
       return { data: cached.data };
     }
-    
+
     if (cached) {
       this.requestCache.delete(key);
     }
-    
+
     return null;
   }
 
@@ -585,4 +622,3 @@ export const post = networkClient.post.bind(networkClient);
 export const put = networkClient.put.bind(networkClient);
 export const del = networkClient.delete.bind(networkClient);
 export const patch = networkClient.patch.bind(networkClient);
-

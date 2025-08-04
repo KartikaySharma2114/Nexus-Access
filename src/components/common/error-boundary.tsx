@@ -1,7 +1,16 @@
 'use client';
 
 import React, { ErrorInfo } from 'react';
-import { RefreshCw, AlertTriangle, Home, Bug, Copy, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  RefreshCw,
+  AlertTriangle,
+  Home,
+  Bug,
+  Copy,
+  Send,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -11,7 +20,11 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { ErrorHandler, type ErrorContext } from '@/lib/error-utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,7 +54,7 @@ export class ErrorBoundary extends React.Component<
 
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { 
+    this.state = {
       hasError: false,
       isDetailsOpen: false,
       isReporting: false,
@@ -116,7 +129,9 @@ export class ErrorBoundary extends React.Component<
     };
 
     try {
-      await navigator.clipboard.writeText(JSON.stringify(errorDetails, null, 2));
+      await navigator.clipboard.writeText(
+        JSON.stringify(errorDetails, null, 2)
+      );
       // Show success toast (would need toast context)
       console.log('Error details copied to clipboard');
     } catch (err) {
@@ -160,7 +175,7 @@ export class ErrorBoundary extends React.Component<
   };
 
   toggleDetails = () => {
-    this.setState(prev => ({ isDetailsOpen: !prev.isDetailsOpen }));
+    this.setState((prev) => ({ isDetailsOpen: !prev.isDetailsOpen }));
   };
 
   getErrorSuggestions = (error: Error): string[] => {
@@ -202,8 +217,13 @@ export class ErrorBoundary extends React.Component<
         );
       }
 
-      const { level = 'global', showErrorDetails = true, enableErrorReporting = true } = this.props;
-      const { error, errorInfo, errorId, isDetailsOpen, isReporting } = this.state;
+      const {
+        level = 'global',
+        showErrorDetails = true,
+        enableErrorReporting = true,
+      } = this.props;
+      const { error, errorInfo, errorId, isDetailsOpen, isReporting } =
+        this.state;
 
       const suggestions = error ? this.getErrorSuggestions(error) : [];
 
@@ -228,7 +248,9 @@ export class ErrorBoundary extends React.Component<
                 <Bug className="w-4 h-4" />
                 <AlertDescription>
                   <p className="font-semibold">Error Message:</p>
-                  <p className="mt-1">{error?.message || 'An unknown error occurred.'}</p>
+                  <p className="mt-1">
+                    {error?.message || 'An unknown error occurred.'}
+                  </p>
                   {errorId && (
                     <p className="mt-2 text-xs text-muted-foreground">
                       Error ID: {errorId}
@@ -244,7 +266,9 @@ export class ErrorBoundary extends React.Component<
                     <p className="font-semibold mb-2">Suggested Solutions:</p>
                     <ul className="list-disc list-inside space-y-1">
                       {suggestions.map((suggestion, index) => (
-                        <li key={index} className="text-sm">{suggestion}</li>
+                        <li key={index} className="text-sm">
+                          {suggestion}
+                        </li>
                       ))}
                     </ul>
                   </AlertDescription>
@@ -252,7 +276,10 @@ export class ErrorBoundary extends React.Component<
               )}
 
               {showErrorDetails && (
-                <Collapsible open={isDetailsOpen} onOpenChange={this.toggleDetails}>
+                <Collapsible
+                  open={isDetailsOpen}
+                  onOpenChange={this.toggleDetails}
+                >
                   <CollapsibleTrigger asChild>
                     <Button variant="outline" className="w-full">
                       {isDetailsOpen ? (
@@ -278,7 +305,9 @@ export class ErrorBoundary extends React.Component<
                         </pre>
                         {errorInfo?.componentStack && (
                           <>
-                            <p className="font-semibold mt-4 mb-2">Component Stack:</p>
+                            <p className="font-semibold mt-4 mb-2">
+                              Component Stack:
+                            </p>
                             <pre className="text-xs whitespace-pre-wrap bg-muted p-2 rounded overflow-auto max-h-40">
                               {errorInfo.componentStack}
                             </pre>
@@ -295,7 +324,7 @@ export class ErrorBoundary extends React.Component<
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Try Again
                 </Button>
-                
+
                 <Button variant="outline" onClick={this.reloadPage}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Reload Page
@@ -314,8 +343,8 @@ export class ErrorBoundary extends React.Component<
                 )}
 
                 {enableErrorReporting && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={this.reportError}
                     disabled={isReporting}
                   >

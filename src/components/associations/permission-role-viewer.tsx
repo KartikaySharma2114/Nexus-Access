@@ -169,7 +169,9 @@ export function PermissionRoleViewer({
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-foreground">{permission.name}</h4>
+                          <h4 className="font-medium text-foreground">
+                            {permission.name}
+                          </h4>
                           <Badge variant="secondary" className="text-xs">
                             <Users className="h-3 w-3 mr-1" />
                             {roleCount} roles
@@ -238,7 +240,10 @@ export function PermissionRoleViewer({
                           {new Date(role.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge variant="default" className="bg-green-600 dark:bg-green-700">
+                      <Badge
+                        variant="default"
+                        className="bg-green-600 dark:bg-green-700"
+                      >
                         Assigned
                       </Badge>
                     </div>
@@ -269,7 +274,9 @@ export function PermissionRoleViewer({
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {permissions.length}
               </div>
-              <div className="text-sm text-blue-600 dark:text-blue-400">Total Permissions</div>
+              <div className="text-sm text-blue-600 dark:text-blue-400">
+                Total Permissions
+              </div>
             </div>
             <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -278,7 +285,9 @@ export function PermissionRoleViewer({
                     .length
                 }
               </div>
-              <div className="text-sm text-green-600 dark:text-green-400">Assigned Permissions</div>
+              <div className="text-sm text-green-600 dark:text-green-400">
+                Assigned Permissions
+              </div>
             </div>
             <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
               <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">

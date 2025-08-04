@@ -17,7 +17,11 @@ export interface NetworkStatus {
 export function useNetworkStatus(): NetworkStatus {
   const [status, setStatus] = useState<NetworkStatus>(() => {
     if (typeof window === 'undefined') {
-      return { isOnline: true, connectionType: 'unknown', effectiveType: 'unknown' };
+      return {
+        isOnline: true,
+        connectionType: 'unknown',
+        effectiveType: 'unknown',
+      };
     }
     return networkMonitor.getStatus();
   });
@@ -43,7 +47,9 @@ export function useNetworkStatus(): NetworkStatus {
 export function useNetworkConnection() {
   const status = useNetworkStatus();
 
-  const waitForConnection = async (timeout: number = 30000): Promise<boolean> => {
+  const waitForConnection = async (
+    timeout: number = 30000
+  ): Promise<boolean> => {
     if (status.isOnline) {
       return true;
     }

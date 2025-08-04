@@ -57,14 +57,18 @@ export async function GET() {
     // Format recent activity to match the expected interface
     const recentActivity: Array<{
       id: string;
-      type: 'role_created' | 'permission_created' | 'association_created' | 'association_deleted';
+      type:
+        | 'role_created'
+        | 'permission_created'
+        | 'association_created'
+        | 'association_deleted';
       description: string;
       timestamp: string;
     }> = [];
-    
+
     // Add recent permissions
     if (recentPermissions) {
-      recentPermissions.forEach(permission => {
+      recentPermissions.forEach((permission) => {
         recentActivity.push({
           id: `permission_${permission.id}`,
           type: 'permission_created' as const,
@@ -73,10 +77,10 @@ export async function GET() {
         });
       });
     }
-    
+
     // Add recent roles
     if (recentRoles) {
-      recentRoles.forEach(role => {
+      recentRoles.forEach((role) => {
         recentActivity.push({
           id: `role_${role.id}`,
           type: 'role_created' as const,
@@ -85,9 +89,12 @@ export async function GET() {
         });
       });
     }
-    
+
     // Sort by timestamp (most recent first) and limit to 10
-    recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    recentActivity.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
     const limitedActivity = recentActivity.slice(0, 10);
 
     return NextResponse.json({

@@ -25,7 +25,8 @@ export const nameSchema = z
   .string()
   .transform((val) => val.trim())
   .pipe(
-    z.string()
+    z
+      .string()
       .min(1, 'Name is required')
       .max(100, 'Name must be less than 100 characters')
       .regex(
@@ -48,10 +49,7 @@ export const urlSchema = z
 
 export const phoneSchema = z
   .string()
-  .regex(
-    /^\+?[1-9]\d{1,14}$/,
-    'Invalid phone number format'
-  )
+  .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format')
   .optional();
 
 // Pagination schemas
@@ -99,21 +97,23 @@ export const dateSchema = z
   .or(z.date())
   .transform((val) => new Date(val));
 
-export const dateRangeSchema = z.object({
-  startDate: dateSchema.optional(),
-  endDate: dateSchema.optional(),
-}).refine(
-  (data) => {
-    if (data.startDate && data.endDate) {
-      return data.startDate <= data.endDate;
+export const dateRangeSchema = z
+  .object({
+    startDate: dateSchema.optional(),
+    endDate: dateSchema.optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.startDate <= data.endDate;
+      }
+      return true;
+    },
+    {
+      message: 'Start date must be before or equal to end date',
+      path: ['endDate'],
     }
-    return true;
-  },
-  {
-    message: 'Start date must be before or equal to end date',
-    path: ['endDate'],
-  }
-);
+  );
 
 // File upload schemas
 export const fileSchema = z.object({
@@ -123,10 +123,12 @@ export const fileSchema = z.object({
 });
 
 export const imageFileSchema = fileSchema.extend({
-  type: z.string().regex(
-    /^image\/(jpeg|jpg|png|gif|webp)$/,
-    'File must be a valid image format (JPEG, PNG, GIF, or WebP)'
-  ),
+  type: z
+    .string()
+    .regex(
+      /^image\/(jpeg|jpg|png|gif|webp)$/,
+      'File must be a valid image format (JPEG, PNG, GIF, or WebP)'
+    ),
   size: z.number().max(5 * 1024 * 1024, 'Image file size cannot exceed 5MB'),
 });
 
@@ -135,13 +137,18 @@ export const nonEmptyArraySchema = <T extends z.ZodTypeAny>(schema: T) =>
   z.array(schema).min(1, 'At least one item is required');
 
 export const uniqueArraySchema = <T extends z.ZodTypeAny>(schema: T) =>
-  z.array(schema).refine(
-    (items) => new Set(items).size === items.length,
-    'Array items must be unique'
-  );
+  z
+    .array(schema)
+    .refine(
+      (items) => new Set(items).size === items.length,
+      'Array items must be unique'
+    );
 
 // Conditional schemas
-export const conditionalSchema = <T extends z.ZodTypeAny, U extends z.ZodTypeAny>(
+export const conditionalSchema = <
+  T extends z.ZodTypeAny,
+  U extends z.ZodTypeAny,
+>(
   condition: (data: any) => boolean,
   trueSchema: T,
   falseSchema: U
@@ -198,20 +205,19 @@ export const createEnumSchema = <T extends readonly [string, ...string[]]>(
     message: message || `Value must be one of: ${values.join(', ')}`,
   });
 
-export const createRegexSchema = (
-  pattern: RegExp,
-  message: string
-) =>
+export const createRegexSchema = (pattern: RegExp, message: string) =>
   z.string().regex(pattern, message);
 
 // Validation result types
-export type ValidationResult<T> = {
-  success: true;
-  data: T;
-} | {
-  success: false;
-  errors: Record<string, string[]>;
-};
+export type ValidationResult<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      errors: Record<string, string[]>;
+    };
 
 // Validation utility functions
 export const validateData = <T>(
@@ -219,7 +225,7 @@ export const validateData = <T>(
   data: unknown
 ): ValidationResult<T> => {
   const result = schema.safeParse(data);
-  
+
   if (result.success) {
     return {
       success: true,
@@ -228,7 +234,7 @@ export const validateData = <T>(
   }
 
   const errors: Record<string, string[]> = {};
-  
+
   result.error.issues.forEach((issue) => {
     const path = issue.path.join('.');
     if (!errors[path]) {
@@ -248,7 +254,7 @@ export const validateField = <T>(
   value: unknown
 ): { isValid: boolean; error?: string } => {
   const result = schema.safeParse(value);
-  
+
   if (result.success) {
     return { isValid: true };
   }
@@ -270,7 +276,7 @@ export const pickSchema = <T extends z.ZodRawShape, K extends keyof T>(
   keys: K[]
 ) => {
   const pickObject = {} as any;
-  keys.forEach(key => {
+  keys.forEach((key) => {
     pickObject[key] = true;
   });
   return schema.pick(pickObject);
@@ -281,7 +287,7 @@ export const omitSchema = <T extends z.ZodRawShape, K extends keyof T>(
   keys: K[]
 ) => {
   const omitObject = {} as any;
-  keys.forEach(key => {
+  keys.forEach((key) => {
     omitObject[key] = true;
   });
   return schema.omit(omitObject);

@@ -27,7 +27,8 @@ export interface AssociationFilters {
 export const associationKeys = {
   all: ['associations'] as const,
   lists: () => [...associationKeys.all, 'list'] as const,
-  list: (filters: AssociationFilters) => [...associationKeys.lists(), filters] as const,
+  list: (filters: AssociationFilters) =>
+    [...associationKeys.lists(), filters] as const,
   matrix: () => [...associationKeys.all, 'matrix'] as const,
 };
 
@@ -38,12 +39,17 @@ export function useAssociations(filters: AssociationFilters = {}) {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.roleId) params.append('roleId', filters.roleId);
-      if (filters.permissionId) params.append('permissionId', filters.permissionId);
-      
+      if (filters.permissionId)
+        params.append('permissionId', filters.permissionId);
+
       const queryString = params.toString();
-      const endpoint = queryString ? `/associations?${queryString}` : '/associations';
-      
-      return apiClient.get<{ associations: Association[]; total: number }>(endpoint);
+      const endpoint = queryString
+        ? `/associations?${queryString}`
+        : '/associations';
+
+      return apiClient.get<{ associations: Association[]; total: number }>(
+        endpoint
+      );
     },
     staleTime: 1 * 60 * 1000, // 1 minute (associations change frequently)
     gcTime: 3 * 60 * 1000, // 3 minutes
@@ -54,11 +60,17 @@ export function useAssociations(filters: AssociationFilters = {}) {
 export function useAssociationMatrix() {
   return useQuery({
     queryKey: associationKeys.matrix(),
-    queryFn: () => apiClient.get<{
-      roles: Array<{ id: string; name: string }>;
-      permissions: Array<{ id: string; name: string; resource: string; action: string }>;
-      associations: Array<{ role_id: string; permission_id: string }>;
-    }>('/matrix'),
+    queryFn: () =>
+      apiClient.get<{
+        roles: Array<{ id: string; name: string }>;
+        permissions: Array<{
+          id: string;
+          name: string;
+          resource: string;
+          action: string;
+        }>;
+        associations: Array<{ role_id: string; permission_id: string }>;
+      }>('/matrix'),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -85,7 +97,9 @@ export function useDeleteAssociation() {
 
   return useMutation({
     mutationFn: (data: { role_id: string; permission_id: string }) =>
-      apiClient.delete(`/associations?role_id=${data.role_id}&permission_id=${data.permission_id}`),
+      apiClient.delete(
+        `/associations?role_id=${data.role_id}&permission_id=${data.permission_id}`
+      ),
     onSuccess: () => {
       // Invalidate associations and matrix data
       queryClient.invalidateQueries({ queryKey: associationKeys.lists() });
@@ -99,8 +113,9 @@ export function useBulkCreateAssociations() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { associations: Array<{ role_id: string; permission_id: string }> }) =>
-      apiClient.post('/associations/bulk', data),
+    mutationFn: (data: {
+      associations: Array<{ role_id: string; permission_id: string }>;
+    }) => apiClient.post('/associations/bulk', data),
     onSuccess: () => {
       // Invalidate all association-related queries
       queryClient.invalidateQueries({ queryKey: associationKeys.all });
@@ -113,12 +128,17 @@ export function useBulkDeleteAssociations() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { associations: Array<{ role_id: string; permission_id: string }> }) => {
+    mutationFn: (data: {
+      associations: Array<{ role_id: string; permission_id: string }>;
+    }) => {
       // For bulk delete, we'll use POST with a different endpoint or pass as query params
       const params = new URLSearchParams();
       data.associations.forEach((assoc, index) => {
         params.append(`associations[${index}][role_id]`, assoc.role_id);
-        params.append(`associations[${index}][permission_id]`, assoc.permission_id);
+        params.append(
+          `associations[${index}][permission_id]`,
+          assoc.permission_id
+        );
       });
       return apiClient.delete(`/associations/bulk?${params.toString()}`);
     },

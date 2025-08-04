@@ -22,7 +22,8 @@ export interface PermissionFilters {
 export const permissionKeys = {
   all: ['permissions'] as const,
   lists: () => [...permissionKeys.all, 'list'] as const,
-  list: (filters: PermissionFilters) => [...permissionKeys.lists(), filters] as const,
+  list: (filters: PermissionFilters) =>
+    [...permissionKeys.lists(), filters] as const,
   details: () => [...permissionKeys.all, 'detail'] as const,
   detail: (id: string) => [...permissionKeys.details(), id] as const,
 };
@@ -37,11 +38,15 @@ export function usePermissions(filters: PermissionFilters = {}) {
       if (filters.resource) params.append('resource', filters.resource);
       if (filters.sortBy) params.append('sortBy', filters.sortBy);
       if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-      
+
       const queryString = params.toString();
-      const endpoint = queryString ? `/permissions?${queryString}` : '/permissions';
-      
-      return apiClient.get<{ permissions: Permission[]; total: number }>(endpoint);
+      const endpoint = queryString
+        ? `/permissions?${queryString}`
+        : '/permissions';
+
+      return apiClient.get<{ permissions: Permission[]; total: number }>(
+        endpoint
+      );
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes

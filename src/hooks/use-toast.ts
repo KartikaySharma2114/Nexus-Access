@@ -190,7 +190,10 @@ function useToast() {
 
 // Enhanced toast functions with better error handling integration
 function createToastFunction(variant: ToastProps['variant']) {
-  return (message: string, options?: Omit<Toast, 'variant' | 'description'>) => {
+  return (
+    message: string,
+    options?: Omit<Toast, 'variant' | 'description'>
+  ) => {
     return toast({
       variant,
       description: message,
@@ -208,7 +211,7 @@ const toastInfo = createToastFunction('info');
 // Enhanced error toast with error object support
 function toastErrorFromError(error: unknown, options?: Omit<Toast, 'variant'>) {
   let message = 'An unexpected error occurred';
-  let title = 'Error';
+  const title = 'Error';
 
   if (error instanceof Error) {
     message = error.message;
@@ -238,9 +241,12 @@ function toastNetworkError(error: unknown, options?: Omit<Toast, 'variant'>) {
 }
 
 // Validation error toast
-function toastValidationError(errors: Record<string, string[]> | string, options?: Omit<Toast, 'variant'>) {
+function toastValidationError(
+  errors: Record<string, string[]> | string,
+  options?: Omit<Toast, 'variant'>
+) {
   let message = 'Please check your input and try again.';
-  
+
   if (typeof errors === 'string') {
     message = errors;
   } else if (errors && typeof errors === 'object') {

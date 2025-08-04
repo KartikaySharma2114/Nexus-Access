@@ -256,13 +256,19 @@ export function AssociationMatrix({ className }: AssociationMatrixProps) {
         {/* Summary */}
         <div className="mt-4 flex gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Badge variant="default" className="w-6 h-6 p-0 flex items-center justify-center">
+            <Badge
+              variant="default"
+              className="w-6 h-6 p-0 flex items-center justify-center"
+            >
               <Check className="h-4 w-4" />
             </Badge>
             <span>Associated</span>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="w-6 h-6 p-0 flex items-center justify-center">
+            <Badge
+              variant="outline"
+              className="w-6 h-6 p-0 flex items-center justify-center"
+            >
               <X className="h-4 w-4 opacity-30" />
             </Badge>
             <span>Not Associated</span>

@@ -50,10 +50,11 @@ export async function middleware(request: NextRequest) {
     }
 
     // Protect main app routes (except auth routes)
-    const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || 
-                       request.nextUrl.pathname.startsWith('/signup');
+    const isAuthRoute =
+      request.nextUrl.pathname.startsWith('/login') ||
+      request.nextUrl.pathname.startsWith('/signup');
     const isPublicRoute = request.nextUrl.pathname === '/' && !session;
-    
+
     if (!isAuthRoute && !session && request.nextUrl.pathname !== '/') {
       const redirectUrl = new URL('/login', request.url);
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
@@ -61,7 +62,11 @@ export async function middleware(request: NextRequest) {
     }
 
     // Redirect authenticated users away from auth pages
-    if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && session) {
+    if (
+      (request.nextUrl.pathname === '/login' ||
+        request.nextUrl.pathname === '/signup') &&
+      session
+    ) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 

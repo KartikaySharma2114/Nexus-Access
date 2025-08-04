@@ -2,10 +2,14 @@
  * Error feedback system for user-friendly error reporting and recovery
  */
 
-import { ErrorHandler, type StructuredError, type ErrorContext } from './error-utils';
-import { 
-  toastErrorFromError, 
-  toastNetworkError, 
+import {
+  ErrorHandler,
+  type StructuredError,
+  type ErrorContext,
+} from './error-utils';
+import {
+  toastErrorFromError,
+  toastNetworkError,
   toastValidationError,
   toastWarning,
   toastInfo,
@@ -24,7 +28,13 @@ export interface ErrorFeedbackOptions {
 export interface RecoveryAction {
   label: string;
   action: () => void | Promise<void>;
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  variant?:
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link';
 }
 
 export interface ErrorFeedbackResult {
@@ -69,7 +79,7 @@ export class ErrorFeedbackSystem {
     } = options;
 
     // Process error through centralized handler
-    const structuredError = logError 
+    const structuredError = logError
       ? await this.errorHandler.handleError(error, context)
       : this.errorHandler.processError(error, context);
 
@@ -84,7 +94,7 @@ export class ErrorFeedbackSystem {
     }
 
     // Generate recovery actions
-    const recoveryActions = showRecoveryOptions 
+    const recoveryActions = showRecoveryOptions
       ? this.generateRecoveryActions(structuredError)
       : [];
 
@@ -193,13 +203,11 @@ export class ErrorFeedbackSystem {
         break;
 
       case 'VALIDATION_ERROR':
-        actions.push(
-          {
-            label: 'Try Again',
-            action: () => {}, // Will be handled by the form
-            variant: 'outline',
-          }
-        );
+        actions.push({
+          label: 'Try Again',
+          action: () => {}, // Will be handled by the form
+          variant: 'outline',
+        });
         break;
 
       default:
@@ -226,11 +234,11 @@ export class ErrorFeedbackSystem {
    */
   private async checkNetworkConnection(): Promise<void> {
     try {
-      const response = await fetch('/api/health', { 
+      const response = await fetch('/api/health', {
         method: 'HEAD',
         cache: 'no-cache',
       });
-      
+
       if (response.ok) {
         toastInfo('Connection restored. You can try again now.', {
           title: 'Connection OK',
@@ -241,9 +249,12 @@ export class ErrorFeedbackSystem {
         });
       }
     } catch (error) {
-      toastWarning('Unable to connect to the server. Please check your internet connection.', {
-        title: 'Connection Failed',
-      });
+      toastWarning(
+        'Unable to connect to the server. Please check your internet connection.',
+        {
+          title: 'Connection Failed',
+        }
+      );
     }
   }
 
@@ -252,7 +263,8 @@ export class ErrorFeedbackSystem {
    */
   private redirectToLogin(): void {
     if (typeof window !== 'undefined') {
-      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+      window.location.href =
+        '/login?redirect=' + encodeURIComponent(window.location.pathname);
     }
   }
 
@@ -290,11 +302,11 @@ export class ErrorFeedbackSystem {
     const subject = encodeURIComponent(`Error Report: ${error.id}`);
     const body = encodeURIComponent(
       `Error ID: ${error.id}\n` +
-      `Error Type: ${error.type}\n` +
-      `Message: ${error.message}\n` +
-      `Timestamp: ${error.timestamp}\n` +
-      `URL: ${window.location.href}\n\n` +
-      `Please describe what you were doing when this error occurred:`
+        `Error Type: ${error.type}\n` +
+        `Message: ${error.message}\n` +
+        `Timestamp: ${error.timestamp}\n` +
+        `URL: ${window.location.href}\n\n` +
+        `Please describe what you were doing when this error occurred:`
     );
 
     // Try to open email client
@@ -322,14 +334,20 @@ export class ErrorFeedbackSystem {
         }),
       });
 
-      toastInfo('Error report sent successfully. Thank you for helping us improve!', {
-        title: 'Report Sent',
-      });
+      toastInfo(
+        'Error report sent successfully. Thank you for helping us improve!',
+        {
+          title: 'Report Sent',
+        }
+      );
     } catch (reportError) {
       console.error('Failed to report error:', reportError);
-      toastWarning('Unable to send error report. Please try contacting support directly.', {
-        title: 'Report Failed',
-      });
+      toastWarning(
+        'Unable to send error report. Please try contacting support directly.',
+        {
+          title: 'Report Failed',
+        }
+      );
     }
   }
 
@@ -341,7 +359,7 @@ export class ErrorFeedbackSystem {
     options: ErrorFeedbackOptions = {}
   ): ErrorFeedbackResult {
     const errorMessage = this.formatValidationErrors(errors);
-    
+
     if (options.showToast !== false) {
       toastValidationError(errorMessage, {
         title: 'Please correct the following errors:',
@@ -362,7 +380,9 @@ export class ErrorFeedbackSystem {
   private formatValidationErrors(errors: Record<string, string[]>): string {
     const errorMessages = Object.entries(errors)
       .map(([field, messages]) => {
-        const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const fieldName = field
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, (l) => l.toUpperCase());
         return `${fieldName}: ${messages.join(', ')}`;
       })
       .join('\n');
@@ -421,8 +441,10 @@ export const errorFeedback = ErrorFeedbackSystem.getInstance();
 
 // Convenience functions
 export const handleError = errorFeedback.handleError.bind(errorFeedback);
-export const handleValidationErrors = errorFeedback.handleValidationErrors.bind(errorFeedback);
-export const handleNetworkError = errorFeedback.handleNetworkError.bind(errorFeedback);
+export const handleValidationErrors =
+  errorFeedback.handleValidationErrors.bind(errorFeedback);
+export const handleNetworkError =
+  errorFeedback.handleNetworkError.bind(errorFeedback);
 export const showSuccess = errorFeedback.showSuccess.bind(errorFeedback);
 export const showWarning = errorFeedback.showWarning.bind(errorFeedback);
 export const showInfo = errorFeedback.showInfo.bind(errorFeedback);

@@ -30,17 +30,19 @@ export const aiCommandSchema = z.object({
 
 export const aiCommandHistorySchema = z.object({
   user_id: idSchema.optional(),
-  command_type: z.enum([
-    'create_permission',
-    'create_role',
-    'assign_permission',
-    'assign_role',
-    'search',
-    'filter',
-    'export',
-    'import',
-    'general',
-  ]).optional(),
+  command_type: z
+    .enum([
+      'create_permission',
+      'create_role',
+      'assign_permission',
+      'assign_role',
+      'search',
+      'filter',
+      'export',
+      'import',
+      'general',
+    ])
+    .optional(),
   success: z.boolean().optional(),
   start_date: z.string().datetime().optional(),
   end_date: z.string().datetime().optional(),
@@ -73,7 +75,10 @@ export const commandFeedbackSchema = z.object({
   rating: z.number().int().min(1).max(5),
   feedback: z.string().max(1000, 'Feedback is too long').optional(),
   was_helpful: z.boolean(),
-  suggested_improvement: z.string().max(500, 'Suggestion is too long').optional(),
+  suggested_improvement: z
+    .string()
+    .max(500, 'Suggestion is too long')
+    .optional(),
 });
 
 export const reportIssueSchema = z.object({
@@ -86,10 +91,22 @@ export const reportIssueSchema = z.object({
     'security_concern',
     'other',
   ]),
-  description: z.string().min(10, 'Please provide a detailed description').max(1000, 'Description is too long'),
-  steps_to_reproduce: z.string().max(1000, 'Steps description is too long').optional(),
-  expected_behavior: z.string().max(500, 'Expected behavior description is too long').optional(),
-  actual_behavior: z.string().max(500, 'Actual behavior description is too long').optional(),
+  description: z
+    .string()
+    .min(10, 'Please provide a detailed description')
+    .max(1000, 'Description is too long'),
+  steps_to_reproduce: z
+    .string()
+    .max(1000, 'Steps description is too long')
+    .optional(),
+  expected_behavior: z
+    .string()
+    .max(500, 'Expected behavior description is too long')
+    .optional(),
+  actual_behavior: z
+    .string()
+    .max(500, 'Actual behavior description is too long')
+    .optional(),
 });
 
 // AI model configuration schemas
@@ -105,9 +122,15 @@ export const aiModelConfigSchema = z.object({
 
 // AI command templates schemas
 export const createCommandTemplateSchema = z.object({
-  name: z.string().min(1, 'Template name is required').max(100, 'Name is too long'),
+  name: z
+    .string()
+    .min(1, 'Template name is required')
+    .max(100, 'Name is too long'),
   description: z.string().max(500, 'Description is too long').optional(),
-  template: z.string().min(1, 'Template content is required').max(2000, 'Template is too long'),
+  template: z
+    .string()
+    .min(1, 'Template content is required')
+    .max(2000, 'Template is too long'),
   category: z.enum([
     'permissions',
     'roles',
@@ -118,32 +141,40 @@ export const createCommandTemplateSchema = z.object({
     'administration',
     'general',
   ]),
-  parameters: z.array(z.object({
-    name: z.string().min(1, 'Parameter name is required'),
-    type: z.enum(['string', 'number', 'boolean', 'array', 'object']),
-    required: z.boolean().default(false),
-    description: z.string().optional(),
-    default_value: z.unknown().optional(),
-  })).optional(),
+  parameters: z
+    .array(
+      z.object({
+        name: z.string().min(1, 'Parameter name is required'),
+        type: z.enum(['string', 'number', 'boolean', 'array', 'object']),
+        required: z.boolean().default(false),
+        description: z.string().optional(),
+        default_value: z.unknown().optional(),
+      })
+    )
+    .optional(),
   is_public: z.boolean().default(false),
 });
 
-export const updateCommandTemplateSchema = createCommandTemplateSchema.partial().refine(
-  (data) => Object.keys(data).length > 0,
-  'At least one field must be provided for update'
-);
+export const updateCommandTemplateSchema = createCommandTemplateSchema
+  .partial()
+  .refine(
+    (data) => Object.keys(data).length > 0,
+    'At least one field must be provided for update'
+  );
 
 export const commandTemplateQuerySchema = z.object({
-  category: z.enum([
-    'permissions',
-    'roles',
-    'users',
-    'associations',
-    'search',
-    'reporting',
-    'administration',
-    'general',
-  ]).optional(),
+  category: z
+    .enum([
+      'permissions',
+      'roles',
+      'users',
+      'associations',
+      'search',
+      'reporting',
+      'administration',
+      'general',
+    ])
+    .optional(),
   is_public: z.boolean().optional(),
   created_by: idSchema.optional(),
   ...searchSchema.shape,
@@ -188,29 +219,41 @@ export const executeCommandSchema = z.object({
 export const commandLearningDataSchema = z.object({
   command: z.string().min(1, 'Command is required'),
   intent: z.string().min(1, 'Intent is required'),
-  entities: z.array(z.object({
-    type: z.string(),
-    value: z.string(),
-    confidence: z.number().min(0).max(1),
-  })).optional(),
+  entities: z
+    .array(
+      z.object({
+        type: z.string(),
+        value: z.string(),
+        confidence: z.number().min(0).max(1),
+      })
+    )
+    .optional(),
   expected_action: z.string().min(1, 'Expected action is required'),
   context: z.record(z.string(), z.unknown()).optional(),
 });
 
 // Validation helper functions
-export const validateAiCommand = (data: unknown): ValidationResult<z.infer<typeof aiCommandSchema>> => {
+export const validateAiCommand = (
+  data: unknown
+): ValidationResult<z.infer<typeof aiCommandSchema>> => {
   return validateData(aiCommandSchema, data);
 };
 
-export const validateCommandFeedback = (data: unknown): ValidationResult<z.infer<typeof commandFeedbackSchema>> => {
+export const validateCommandFeedback = (
+  data: unknown
+): ValidationResult<z.infer<typeof commandFeedbackSchema>> => {
   return validateData(commandFeedbackSchema, data);
 };
 
-export const validateCommandTemplate = (data: unknown): ValidationResult<z.infer<typeof createCommandTemplateSchema>> => {
+export const validateCommandTemplate = (
+  data: unknown
+): ValidationResult<z.infer<typeof createCommandTemplateSchema>> => {
   return validateData(createCommandTemplateSchema, data);
 };
 
-export const validateCommandExecution = (data: unknown): ValidationResult<z.infer<typeof executeCommandSchema>> => {
+export const validateCommandExecution = (
+  data: unknown
+): ValidationResult<z.infer<typeof executeCommandSchema>> => {
   return validateData(executeCommandSchema, data);
 };
 
@@ -225,11 +268,19 @@ export type ReportIssueInput = z.infer<typeof reportIssueSchema>;
 
 export type AiModelConfigInput = z.infer<typeof aiModelConfigSchema>;
 
-export type CreateCommandTemplateInput = z.infer<typeof createCommandTemplateSchema>;
-export type UpdateCommandTemplateInput = z.infer<typeof updateCommandTemplateSchema>;
-export type CommandTemplateQueryInput = z.infer<typeof commandTemplateQuerySchema>;
+export type CreateCommandTemplateInput = z.infer<
+  typeof createCommandTemplateSchema
+>;
+export type UpdateCommandTemplateInput = z.infer<
+  typeof updateCommandTemplateSchema
+>;
+export type CommandTemplateQueryInput = z.infer<
+  typeof commandTemplateQuerySchema
+>;
 
 export type AiAnalyticsQueryInput = z.infer<typeof aiAnalyticsQuerySchema>;
 export type SanitizeCommandInput = z.infer<typeof sanitizeCommandSchema>;
 export type ExecuteCommandInput = z.infer<typeof executeCommandSchema>;
-export type CommandLearningDataInput = z.infer<typeof commandLearningDataSchema>;
+export type CommandLearningDataInput = z.infer<
+  typeof commandLearningDataSchema
+>;

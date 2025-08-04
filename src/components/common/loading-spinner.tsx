@@ -19,7 +19,10 @@ export function LoadingSpinner({
   };
 
   return (
-    <div className={cn('flex items-center justify-center', className)} data-testid="loading-spinner">
+    <div
+      className={cn('flex items-center justify-center', className)}
+      data-testid="loading-spinner"
+    >
       <div className="flex flex-col items-center space-y-2">
         <Loader2 className={cn('animate-spin', sizeClasses[size])} />
         {text && <p className="text-sm text-muted-foreground">{text}</p>}

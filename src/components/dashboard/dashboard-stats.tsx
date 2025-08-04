@@ -59,31 +59,39 @@ const LoadingSkeleton = memo(() => (
 LoadingSkeleton.displayName = 'LoadingSkeleton';
 
 // Memoized error component with retry functionality
-const ErrorDisplay = memo(({ error, onRetry }: { error: string; onRetry?: () => void }) => (
-  <Alert variant="destructive">
-    <AlertCircle className="h-4 w-4" />
-    <AlertDescription className="flex items-center justify-between">
-      <span>Failed to load dashboard statistics: {error}</span>
-      {onRetry && (
-        <Button
-          onClick={onRetry}
-          variant="outline"
-          size="sm"
-          className="ml-4"
-        >
-          Retry
-        </Button>
-      )}
-    </AlertDescription>
-  </Alert>
-));
+const ErrorDisplay = memo(
+  ({ error, onRetry }: { error: string; onRetry?: () => void }) => (
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription className="flex items-center justify-between">
+        <span>Failed to load dashboard statistics: {error}</span>
+        {onRetry && (
+          <Button
+            onClick={onRetry}
+            variant="outline"
+            size="sm"
+            className="ml-4"
+          >
+            Retry
+          </Button>
+        )}
+      </AlertDescription>
+    </Alert>
+  )
+);
 
 ErrorDisplay.displayName = 'ErrorDisplay';
 
 export const DashboardStats = memo(() => {
   const queryClient = useQueryClient();
-  const { data: stats, isLoading, error, refetch, isFetching } = useDashboardStats();
-  
+  const {
+    data: stats,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useDashboardStats();
+
   const handleRefresh = useCallback(async () => {
     try {
       console.log('Refresh button clicked');
@@ -101,12 +109,12 @@ export const DashboardStats = memo(() => {
   const formatDate = useCallback((dateString: string) => {
     try {
       if (!dateString) return 'Unknown date';
-      
+
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
         return 'Invalid date';
       }
-      
+
       return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -126,31 +134,36 @@ export const DashboardStats = memo(() => {
       totalPermissions: 0,
       totalRoles: 0,
       totalAssociations: 0,
-      recentActivity: []
+      recentActivity: [],
     };
-    
+
     return [
       {
         title: 'Total Permissions',
-        value: Number.isInteger(safeStats.totalPermissions) && safeStats.totalPermissions >= 0 
-          ? safeStats.totalPermissions 
-          : 0,
+        value:
+          Number.isInteger(safeStats.totalPermissions) &&
+          safeStats.totalPermissions >= 0
+            ? safeStats.totalPermissions
+            : 0,
         description: 'System actions available',
         icon: Shield,
       },
       {
         title: 'Total Roles',
-        value: Number.isInteger(safeStats.totalRoles) && safeStats.totalRoles >= 0 
-          ? safeStats.totalRoles 
-          : 0,
+        value:
+          Number.isInteger(safeStats.totalRoles) && safeStats.totalRoles >= 0
+            ? safeStats.totalRoles
+            : 0,
         description: 'User role types defined',
         icon: Users,
       },
       {
         title: 'Active Associations',
-        value: Number.isInteger(safeStats.totalAssociations) && safeStats.totalAssociations >= 0 
-          ? safeStats.totalAssociations 
-          : 0,
+        value:
+          Number.isInteger(safeStats.totalAssociations) &&
+          safeStats.totalAssociations >= 0
+            ? safeStats.totalAssociations
+            : 0,
         description: 'Role-permission links',
         icon: Link2,
       },
@@ -162,18 +175,24 @@ export const DashboardStats = memo(() => {
     if (!stats || !Array.isArray(stats.recentActivity)) {
       return [];
     }
-    
+
     // Filter out invalid activity items and ensure they have required properties
-    return stats.recentActivity.filter(activity => 
-      activity && 
-      typeof activity === 'object' &&
-      typeof activity.id === 'string' &&
-      activity.id.trim() !== '' &&
-      typeof activity.description === 'string' &&
-      activity.description.trim() !== '' &&
-      typeof activity.timestamp === 'string' &&
-      activity.timestamp.trim() !== '' &&
-      ['role_created', 'permission_created', 'association_created', 'association_deleted'].includes(activity.type)
+    return stats.recentActivity.filter(
+      (activity) =>
+        activity &&
+        typeof activity === 'object' &&
+        typeof activity.id === 'string' &&
+        activity.id.trim() !== '' &&
+        typeof activity.description === 'string' &&
+        activity.description.trim() !== '' &&
+        typeof activity.timestamp === 'string' &&
+        activity.timestamp.trim() !== '' &&
+        [
+          'role_created',
+          'permission_created',
+          'association_created',
+          'association_deleted',
+        ].includes(activity.type)
     );
   }, [stats]);
 
@@ -186,22 +205,22 @@ export const DashboardStats = memo(() => {
   }
 
   // Handle case where data is successfully fetched but all values are zero
-  const hasAnyData = stats && (
-    (stats.totalPermissions > 0) || 
-    (stats.totalRoles > 0) || 
-    (stats.totalAssociations > 0) ||
-    (stats.recentActivity && stats.recentActivity.length > 0)
-  );
+  const hasAnyData =
+    stats &&
+    (stats.totalPermissions > 0 ||
+      stats.totalRoles > 0 ||
+      stats.totalAssociations > 0 ||
+      (stats.recentActivity && stats.recentActivity.length > 0));
 
   return (
     <div className="space-y-6">
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Dashboard Statistics</h2>
-          <p className="text-muted-foreground">
-            Overview of your RBAC system
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight">
+            Dashboard Statistics
+          </h2>
+          <p className="text-muted-foreground">Overview of your RBAC system</p>
         </div>
         <Button
           variant="outline"
@@ -210,11 +229,13 @@ export const DashboardStats = memo(() => {
           disabled={isFetching}
           className="flex items-center gap-2"
         >
-          <RefreshCw className={`h-4 w-4 transition-transform ${isFetching ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-4 w-4 transition-transform ${isFetching ? 'animate-spin' : ''}`}
+          />
           {isFetching ? 'Refreshing...' : 'Refresh'}
         </Button>
       </div>
-      
+
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {statsCards.map((card) => {
@@ -247,7 +268,8 @@ export const DashboardStats = memo(() => {
                 No data found
               </p>
               <p className="text-xs text-muted-foreground max-w-sm">
-                Your RBAC system appears to be empty. Start by creating some permissions and roles to see statistics here.
+                Your RBAC system appears to be empty. Start by creating some
+                permissions and roles to see statistics here.
               </p>
             </div>
           </CardContent>
@@ -258,9 +280,7 @@ export const DashboardStats = memo(() => {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Recent Activity</CardTitle>
-          <CardDescription>
-            Latest system activity and changes
-          </CardDescription>
+          <CardDescription>Latest system activity and changes</CardDescription>
         </CardHeader>
         <CardContent>
           {recentActivity.length > 0 ? (
@@ -270,7 +290,9 @@ export const DashboardStats = memo(() => {
                   key={activity.id}
                   className="flex items-center justify-between py-2 border-b border-border last:border-b-0"
                 >
-                  <span className="font-medium text-sm">{activity.description}</span>
+                  <span className="font-medium text-sm">
+                    {activity.description}
+                  </span>
                   <Badge variant="secondary">
                     {formatDate(activity.timestamp)}
                   </Badge>
@@ -283,7 +305,8 @@ export const DashboardStats = memo(() => {
                 No recent activity found
               </p>
               <p className="text-xs text-muted-foreground">
-                Activity will appear here when you create permissions, roles, or associations
+                Activity will appear here when you create permissions, roles, or
+                associations
               </p>
             </div>
           )}

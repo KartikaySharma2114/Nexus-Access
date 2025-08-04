@@ -26,29 +26,35 @@ export interface DatabaseErrorInfo {
 /**
  * Enhanced database error mapping with more comprehensive coverage
  */
-const DATABASE_ERROR_MAPPINGS: Record<string, { message: string; statusCode: number; userMessage: string }> = {
+const DATABASE_ERROR_MAPPINGS: Record<
+  string,
+  { message: string; statusCode: number; userMessage: string }
+> = {
   // Constraint violations
   '23505': {
     message: 'Duplicate entry',
     statusCode: 409,
-    userMessage: 'A record with this information already exists. Please use different values.',
+    userMessage:
+      'A record with this information already exists. Please use different values.',
   },
   '23503': {
     message: 'Reference constraint violation',
     statusCode: 409,
-    userMessage: 'Cannot delete this record because it is being used by other records.',
+    userMessage:
+      'Cannot delete this record because it is being used by other records.',
   },
   '23502': {
     message: 'Not null violation',
     statusCode: 400,
-    userMessage: 'Required information is missing. Please fill in all required fields.',
+    userMessage:
+      'Required information is missing. Please fill in all required fields.',
   },
   '23514': {
     message: 'Check constraint violation',
     statusCode: 400,
     userMessage: 'The provided data does not meet the required criteria.',
   },
-  
+
   // Permission errors
   '42501': {
     message: 'Insufficient privilege',
@@ -58,9 +64,10 @@ const DATABASE_ERROR_MAPPINGS: Record<string, { message: string; statusCode: num
   '42601': {
     message: 'Syntax error',
     statusCode: 500,
-    userMessage: 'A system error occurred. Please try again or contact support.',
+    userMessage:
+      'A system error occurred. Please try again or contact support.',
   },
-  
+
   // Connection and system errors
   '08000': {
     message: 'Connection exception',
@@ -70,38 +77,39 @@ const DATABASE_ERROR_MAPPINGS: Record<string, { message: string; statusCode: num
   '08003': {
     message: 'Connection does not exist',
     statusCode: 503,
-    userMessage: 'Database connection lost. Please refresh the page and try again.',
+    userMessage:
+      'Database connection lost. Please refresh the page and try again.',
   },
   '08006': {
     message: 'Connection failure',
     statusCode: 503,
     userMessage: 'Unable to connect to the database. Please try again later.',
   },
-  
+
   // PostgREST specific errors
-  'PGRST116': {
+  PGRST116: {
     message: 'Not found',
     statusCode: 404,
     userMessage: 'The requested record was not found.',
   },
-  'PGRST301': {
+  PGRST301: {
     message: 'Parsing error',
     statusCode: 400,
     userMessage: 'Invalid request format. Please check your input.',
   },
-  'PGRST302': {
+  PGRST302: {
     message: 'Invalid range',
     statusCode: 400,
     userMessage: 'Invalid data range specified.',
   },
-  
+
   // Supabase specific errors
-  'SUPABASE_AUTH_ERROR': {
+  SUPABASE_AUTH_ERROR: {
     message: 'Authentication error',
     statusCode: 401,
     userMessage: 'Authentication failed. Please log in again.',
   },
-  'SUPABASE_PERMISSION_ERROR': {
+  SUPABASE_PERMISSION_ERROR: {
     message: 'Permission denied',
     statusCode: 403,
     userMessage: 'You do not have permission to access this resource.',
@@ -116,10 +124,10 @@ export function _handleDatabaseError(
 ): APIErrorResponse {
   const timestamp = new Date().toISOString();
   const errorCode = error.code || 'UNKNOWN';
-  
+
   // Get mapping for known error codes
   const mapping = DATABASE_ERROR_MAPPINGS[errorCode];
-  
+
   if (mapping) {
     return {
       error: mapping.message,
@@ -134,7 +142,9 @@ export function _handleDatabaseError(
   // Handle unknown database errors
   return {
     error: 'Database error',
-    message: error.message || 'An unexpected database error occurred. Please try again or contact support.',
+    message:
+      error.message ||
+      'An unexpected database error occurred. Please try again or contact support.',
     details: error.details,
     code: error.code,
     statusCode: 500,
@@ -152,7 +162,7 @@ export function createAPIErrorResponse(
 ): NextResponse {
   const errorHandler = ErrorHandler.getInstance();
   const structuredError = errorHandler.handleErrorSync(error, context);
-  
+
   const errorResponse: APIErrorResponse = {
     error: structuredError.message,
     message: structuredError.userMessage,
@@ -163,8 +173,8 @@ export function createAPIErrorResponse(
     path: context?.url,
   };
 
-  return NextResponse.json(errorResponse, { 
-    status: errorResponse.statusCode 
+  return NextResponse.json(errorResponse, {
+    status: errorResponse.statusCode,
   });
 }
 
@@ -258,7 +268,7 @@ export function handleValidationError(
 ): NextResponse {
   const errorHandler = ErrorHandler.getInstance();
   const validationError = errorHandler.handleValidationError(errors, context);
-  
+
   return NextResponse.json(
     {
       error: validationError.message,
@@ -283,7 +293,7 @@ export function handleAuthError(
     message,
     statusCode: 401,
   };
-  
+
   return createAPIErrorResponse(authError, 401, context);
 }
 
@@ -299,7 +309,7 @@ export function handleAuthorizationError(
     message,
     statusCode: 403,
   };
-  
+
   return createAPIErrorResponse(authzError, 403, context);
 }
 
@@ -316,7 +326,7 @@ export function handleDatabaseError(
     code: error.code,
     details: error.details,
   };
-  
+
   return createAPIErrorResponse(dbError, undefined, context);
 }
 
@@ -329,7 +339,7 @@ export function handleNetworkError(
 ): NextResponse {
   const errorHandler = ErrorHandler.getInstance();
   const networkError = errorHandler.handleNetworkError(error, context);
-  
+
   return NextResponse.json(
     {
       error: networkError.message,

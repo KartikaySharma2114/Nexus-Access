@@ -33,10 +33,10 @@ export function useRoles(filters: RoleFilters = {}) {
       if (filters.search) params.append('search', filters.search);
       if (filters.sortBy) params.append('sortBy', filters.sortBy);
       if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-      
+
       const queryString = params.toString();
       const endpoint = queryString ? `/roles?${queryString}` : '/roles';
-      
+
       return apiClient.get<{ roles: Role[]; total: number }>(endpoint);
     },
     staleTime: 2 * 60 * 1000, // 2 minutes

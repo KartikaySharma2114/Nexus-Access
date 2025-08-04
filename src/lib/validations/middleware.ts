@@ -49,7 +49,9 @@ export function createValidationMiddleware(options: ValidationOptions) {
           const contentType = request.headers.get('content-type');
           if (contentType?.includes('application/json')) {
             body = await request.json();
-          } else if (contentType?.includes('application/x-www-form-urlencoded')) {
+          } else if (
+            contentType?.includes('application/x-www-form-urlencoded')
+          ) {
             const formData = await request.formData();
             body = Object.fromEntries(formData.entries());
           } else {
@@ -197,7 +199,9 @@ function formatZodErrors(error: z.ZodError): Record<string, string[]> {
 /**
  * Process query parameters and convert string values to appropriate types
  */
-function processQueryParams(query: Record<string, string>): Record<string, any> {
+function processQueryParams(
+  query: Record<string, string>
+): Record<string, any> {
   const processed: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(query)) {
@@ -215,7 +219,7 @@ function processQueryParams(query: Record<string, string>): Record<string, any> 
     }
     // Handle array values (comma-separated)
     else if (value.includes(',')) {
-      processed[key] = value.split(',').map(v => v.trim());
+      processed[key] = value.split(',').map((v) => v.trim());
     }
     // Handle null/undefined
     else if (value === 'null') {
@@ -333,16 +337,18 @@ export function withValidation<R>(
   validationOptions: ValidationOptions,
   handler: (request: NextRequest, context: any) => Promise<R>
 ) {
-  return async function validatedHandler(request: NextRequest, context: any): Promise<R> {
-    
+  return async function validatedHandler(
+    request: NextRequest,
+    context: any
+  ): Promise<R> {
     const validationMiddleware = createValidationMiddleware(validationOptions);
     const validationResult = await validationMiddleware(request, context);
-    
+
     if (validationResult) {
       // Validation failed, return error response
       return validationResult as R;
     }
-    
+
     // Validation passed, call original handler
     return handler(request, context);
   };

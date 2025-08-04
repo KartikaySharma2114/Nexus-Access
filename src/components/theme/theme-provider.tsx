@@ -11,9 +11,9 @@ interface ThemeProviderContextType {
   toggleTheme: () => void;
 }
 
-const ThemeProviderContext = createContext<ThemeProviderContextType | undefined>(
-  undefined
-);
+const ThemeProviderContext = createContext<
+  ThemeProviderContextType | undefined
+>(undefined);
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -39,7 +39,7 @@ export function ThemeProvider({
     } else if (enableSystem) {
       setTheme('system');
     }
-    
+
     // Remove preload transitions class after initialization
     setTimeout(() => {
       document.body.classList.remove('preload-transitions');
@@ -82,7 +82,7 @@ export function ThemeProvider({
     if (theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = () => updateResolvedTheme();
-      
+
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     }

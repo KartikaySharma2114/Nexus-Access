@@ -11,7 +11,10 @@ export interface FormValidationOptions<T> {
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
   debounceMs?: number;
-  onValidationChange?: (isValid: boolean, errors: Record<string, string[]>) => void;
+  onValidationChange?: (
+    isValid: boolean,
+    errors: Record<string, string[]>
+  ) => void;
 }
 
 export interface FormValidationState {
@@ -34,7 +37,9 @@ export interface FormValidationActions<T> {
   setFormErrors: (errors: Record<string, string[]>) => void;
 }
 
-export interface UseFormValidationReturn<T> extends FormValidationState, FormValidationActions<T> {
+export interface UseFormValidationReturn<T>
+  extends FormValidationState,
+    FormValidationActions<T> {
   getFieldError: (field: keyof T) => string | undefined;
   hasFieldError: (field: keyof T) => boolean;
   isFieldTouched: (field: keyof T) => boolean;
@@ -68,30 +73,32 @@ export function useFormValidation<T extends Record<string, any>>(
   // Debounced validation function
   const debouncedValidate = useCallback(
     debounce(async (field: keyof T, value: any) => {
-      setState(prev => ({ ...prev, isValidating: true }));
+      setState((prev) => ({ ...prev, isValidating: true }));
 
       try {
         // Create a partial schema for the specific field
         const fieldSchema = getFieldSchema(schema, field as string);
         if (!fieldSchema) {
-          setState(prev => ({ ...prev, isValidating: false }));
+          setState((prev) => ({ ...prev, isValidating: false }));
           return true;
         }
 
         const result = fieldSchema.safeParse(value);
-        
-        setState(prev => {
+
+        setState((prev) => {
           const newErrors = { ...prev.errors };
           const fieldKey = field as string;
 
           if (result.success) {
             delete newErrors[fieldKey];
           } else {
-            newErrors[fieldKey] = result.error.issues.map(issue => issue.message);
+            newErrors[fieldKey] = result.error.issues.map(
+              (issue) => issue.message
+            );
           }
 
           const isValid = Object.keys(newErrors).length === 0;
-          
+
           return {
             ...prev,
             errors: newErrors,
@@ -108,7 +115,7 @@ export function useFormValidation<T extends Record<string, any>>(
           metadata: { field: field as string },
         });
 
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           errors: {
             ...prev.errors,
@@ -140,15 +147,15 @@ export function useFormValidation<T extends Record<string, any>>(
   // Validate the entire form
   const validateForm = useCallback(
     async (data: T): Promise<boolean> => {
-      setState(prev => ({ ...prev, isValidating: true }));
+      setState((prev) => ({ ...prev, isValidating: true }));
 
       try {
         const result = schema.safeParse(data);
 
         const newErrors: Record<string, string[]> = {};
-        
+
         if (!result.success) {
-          result.error.issues.forEach(issue => {
+          result.error.issues.forEach((issue) => {
             const path = issue.path.join('.');
             const key = path || 'root';
 
@@ -161,7 +168,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
         const isValid = Object.keys(newErrors).length === 0;
 
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           errors: newErrors,
           isValid,
@@ -181,7 +188,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
         const errorObj = { form: [structuredError.userMessage] };
 
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           errors: errorObj,
           isValid: false,
@@ -200,7 +207,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
   // Clear error for a specific field
   const clearFieldError = useCallback((field: keyof T) => {
-    setState(prev => {
+    setState((prev) => {
       const newErrors = { ...prev.errors };
       delete newErrors[field as string];
       const isValid = Object.keys(newErrors).length === 0;
@@ -215,7 +222,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
   // Clear all errors
   const clearAllErrors = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       errors: {},
       isValid: true,
@@ -224,7 +231,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
   // Mark field as touched
   const markFieldTouched = useCallback((field: keyof T) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       touchedFields: new Set(prev.touchedFields).add(field as string),
     }));
@@ -232,7 +239,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
   // Mark form as submitted
   const markFormSubmitted = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       hasBeenSubmitted: true,
     }));
@@ -251,7 +258,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
   // Set error for a specific field
   const setFieldError = useCallback((field: keyof T, error: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       errors: {
         ...prev.errors,
@@ -263,7 +270,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
   // Set multiple form errors
   const setFormErrors = useCallback((errors: Record<string, string[]>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       errors,
       isValid: Object.keys(errors).length === 0,
@@ -311,7 +318,7 @@ export function useFormValidation<T extends Record<string, any>>(
   const handleFieldBlur = useCallback(
     (field: keyof T, value: any) => {
       markFieldTouched(field);
-      
+
       if (validateOnBlur) {
         validateField(field, value);
       }
@@ -329,7 +336,7 @@ export function useFormValidation<T extends Record<string, any>>(
   return {
     // State
     ...state,
-    
+
     // Actions
     validateField,
     validateForm,
@@ -340,7 +347,7 @@ export function useFormValidation<T extends Record<string, any>>(
     resetValidation,
     setFieldError,
     setFormErrors,
-    
+
     // Helpers
     getFieldError,
     hasFieldError,
@@ -357,7 +364,7 @@ function debounce<T extends (...args: any[]) => any>(
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
@@ -367,7 +374,10 @@ function debounce<T extends (...args: any[]) => any>(
 /**
  * Extract field schema from main schema
  */
-function getFieldSchema(schema: z.ZodSchema, fieldName: string): z.ZodSchema | null {
+function getFieldSchema(
+  schema: z.ZodSchema,
+  fieldName: string
+): z.ZodSchema | null {
   try {
     if (schema instanceof z.ZodObject) {
       const shape = schema.shape;
@@ -393,10 +403,10 @@ export function useFieldValidation<T>(
   const validate = useCallback(
     async (newValue: T): Promise<boolean> => {
       setIsValidating(true);
-      
+
       try {
         const result = schema.safeParse(newValue);
-        
+
         if (result.success) {
           setError(undefined);
           setIsValidating(false);

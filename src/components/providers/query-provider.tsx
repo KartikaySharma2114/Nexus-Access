@@ -26,7 +26,8 @@ export function QueryProvider({ children }: QueryProviderProps) {
               }
               return failureCount < 3;
             },
-            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+            retryDelay: (attemptIndex) =>
+              Math.min(1000 * 2 ** attemptIndex, 30000),
             // Refetch on window focus for critical data
             refetchOnWindowFocus: true,
             // Don't refetch on reconnect by default (can be overridden per query)

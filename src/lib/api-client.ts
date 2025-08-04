@@ -22,12 +22,18 @@ export class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: any): Promise<T> {
-    const response = await networkClient.post(`${this.baseUrl}${endpoint}`, data);
+    const response = await networkClient.post(
+      `${this.baseUrl}${endpoint}`,
+      data
+    );
     return response.data;
   }
 
   async put<T>(endpoint: string, data?: any): Promise<T> {
-    const response = await networkClient.put(`${this.baseUrl}${endpoint}`, data);
+    const response = await networkClient.put(
+      `${this.baseUrl}${endpoint}`,
+      data
+    );
     return response.data;
   }
 
@@ -37,7 +43,10 @@ export class ApiClient {
   }
 
   async patch<T>(endpoint: string, data?: any): Promise<T> {
-    const response = await networkClient.patch(`${this.baseUrl}${endpoint}`, data);
+    const response = await networkClient.patch(
+      `${this.baseUrl}${endpoint}`,
+      data
+    );
     return response.data;
   }
 }

@@ -23,7 +23,7 @@ export interface ErrorContext {
   metadata?: Record<string, unknown>;
 }
 
-export type ErrorType = 
+export type ErrorType =
   | 'NETWORK_ERROR'
   | 'VALIDATION_ERROR'
   | 'AUTHENTICATION_ERROR'
@@ -54,7 +54,7 @@ export interface StructuredError {
 export function parseAPIError(error: unknown): ClientError {
   const errorHandler = ErrorHandler.getInstance();
   const structuredError = errorHandler.processError(error);
-  
+
   return {
     message: structuredError.userMessage,
     code: structuredError.code,
@@ -88,7 +88,10 @@ export function isRecoverableError(error: unknown): boolean {
 /**
  * Format error for logging
  */
-export function formatErrorForLogging(error: unknown, context?: string): string {
+export function formatErrorForLogging(
+  error: unknown,
+  context?: string
+): string {
   const timestamp = new Date().toISOString();
   const contextStr = context ? ` [${context}]` : '';
 
@@ -152,20 +155,26 @@ export class ErrorHandler {
 
     if (error && typeof error === 'object') {
       const errorObj = error as Record<string, unknown>;
-      
+
       // Check for explicit error names first
       if (errorObj.name === 'ValidationError') return 'VALIDATION_ERROR';
-      if (errorObj.name === 'AuthenticationError') return 'AUTHENTICATION_ERROR';
+      if (errorObj.name === 'AuthenticationError')
+        return 'AUTHENTICATION_ERROR';
       if (errorObj.name === 'AuthorizationError') return 'AUTHORIZATION_ERROR';
       if (errorObj.name === 'DatabaseError') return 'DATABASE_ERROR';
-      
+
       // Check status codes
       if (errorObj.statusCode === 401) return 'AUTHENTICATION_ERROR';
       if (errorObj.statusCode === 403) return 'AUTHORIZATION_ERROR';
-      if (errorObj.statusCode === 400 || errorObj.statusCode === 422) return 'VALIDATION_ERROR';
-      
+      if (errorObj.statusCode === 400 || errorObj.statusCode === 422)
+        return 'VALIDATION_ERROR';
+
       // Check database error codes
-      if (errorObj.code && typeof errorObj.code === 'string' && errorObj.code.startsWith('23')) {
+      if (
+        errorObj.code &&
+        typeof errorObj.code === 'string' &&
+        errorObj.code.startsWith('23')
+      ) {
         return 'DATABASE_ERROR';
       }
     }
@@ -185,14 +194,20 @@ export class ErrorHandler {
    */
   private getUserFriendlyMessage(error: unknown, errorType: ErrorType): string {
     const errorMessages: Record<ErrorType, string> = {
-      NETWORK_ERROR: 'Network connection failed. Please check your internet connection and try again.',
-      VALIDATION_ERROR: 'The information provided is not valid. Please check your input and try again.',
+      NETWORK_ERROR:
+        'Network connection failed. Please check your internet connection and try again.',
+      VALIDATION_ERROR:
+        'The information provided is not valid. Please check your input and try again.',
       AUTHENTICATION_ERROR: 'Please log in to continue.',
       AUTHORIZATION_ERROR: 'You do not have permission to perform this action.',
-      DATABASE_ERROR: 'A data error occurred. Please try again or contact support if the problem persists.',
-      BUSINESS_LOGIC_ERROR: 'This action cannot be completed due to business rules. Please review your request.',
-      SYSTEM_ERROR: 'A system error occurred. Please try again later or contact support.',
-      UNKNOWN_ERROR: 'An unexpected error occurred. Please try again or contact support if the problem persists.',
+      DATABASE_ERROR:
+        'A data error occurred. Please try again or contact support if the problem persists.',
+      BUSINESS_LOGIC_ERROR:
+        'This action cannot be completed due to business rules. Please review your request.',
+      SYSTEM_ERROR:
+        'A system error occurred. Please try again later or contact support.',
+      UNKNOWN_ERROR:
+        'An unexpected error occurred. Please try again or contact support if the problem persists.',
     };
 
     // Try to extract specific message from error object
@@ -216,10 +231,10 @@ export class ErrorHandler {
     // Non-recoverable errors
     if (errorType === 'AUTHORIZATION_ERROR') return false;
     if (statusCode === 403) return false;
-    
+
     // Authentication errors are recoverable (user can log in)
     if (errorType === 'AUTHENTICATION_ERROR') return true;
-    
+
     // Most other errors are recoverable
     return true;
   }
@@ -231,7 +246,7 @@ export class ErrorHandler {
     const errorId = this.generateErrorId();
     const timestamp = new Date().toISOString();
     const errorType = this.determineErrorType(error);
-    
+
     let message = 'Unknown error';
     let code: string | number | undefined;
     let statusCode: number | undefined;
@@ -243,7 +258,8 @@ export class ErrorHandler {
       stack = error.stack;
     } else if (error && typeof error === 'object') {
       const errorObj = error as Record<string, unknown>;
-      message = (errorObj.message as string) || (errorObj.error as string) || message;
+      message =
+        (errorObj.message as string) || (errorObj.error as string) || message;
       code = errorObj.code as string | number;
       statusCode = errorObj.statusCode as number;
       details = errorObj.details;
@@ -272,7 +288,10 @@ export class ErrorHandler {
   /**
    * Handle error with logging and reporting
    */
-  async handleError(error: unknown, context?: ErrorContext): Promise<StructuredError> {
+  async handleError(
+    error: unknown,
+    context?: ErrorContext
+  ): Promise<StructuredError> {
     const structuredError = this.processError(error, context);
 
     // Log error using the centralized logger
@@ -286,7 +305,7 @@ export class ErrorHandler {
     }
 
     // Report to legacy reporters for backward compatibility
-    this.errorReporters.forEach(reporter => {
+    this.errorReporters.forEach((reporter) => {
       try {
         reporter(structuredError);
       } catch (reportingError) {
@@ -307,7 +326,7 @@ export class ErrorHandler {
     this.logStructuredError(structuredError);
 
     // Report to external services
-    this.errorReporters.forEach(reporter => {
+    this.errorReporters.forEach((reporter) => {
       try {
         reporter(structuredError);
       } catch (reportingError) {
@@ -324,7 +343,7 @@ export class ErrorHandler {
   private logStructuredError(error: StructuredError): void {
     const logLevel = this.getLogLevel(error.type);
     const logMessage = `[${error.type}] ${error.id}: ${error.message}`;
-    
+
     const logData = {
       errorId: error.id,
       type: error.type,
@@ -356,7 +375,9 @@ export class ErrorHandler {
   /**
    * Determine log level based on error type
    */
-  private getLogLevel(errorType: ErrorType): 'error' | 'warn' | 'info' | 'debug' {
+  private getLogLevel(
+    errorType: ErrorType
+  ): 'error' | 'warn' | 'info' | 'debug' {
     switch (errorType) {
       case 'SYSTEM_ERROR':
       case 'DATABASE_ERROR':
@@ -378,7 +399,10 @@ export class ErrorHandler {
   /**
    * Create error context from browser environment
    */
-  static createBrowserContext(component?: string, action?: string): ErrorContext {
+  static createBrowserContext(
+    component?: string,
+    action?: string
+  ): ErrorContext {
     if (typeof window === 'undefined') {
       return { component, action };
     }
@@ -400,8 +424,16 @@ export class ErrorHandler {
       ...context,
       metadata: {
         ...context?.metadata,
-        networkStatus: typeof navigator !== 'undefined' ? (navigator.onLine ? 'online' : 'offline') : 'unknown',
-        connectionType: typeof navigator !== 'undefined' ? (navigator as any).connection?.effectiveType || 'unknown' : 'unknown',
+        networkStatus:
+          typeof navigator !== 'undefined'
+            ? navigator.onLine
+              ? 'online'
+              : 'offline'
+            : 'unknown',
+        connectionType:
+          typeof navigator !== 'undefined'
+            ? (navigator as any).connection?.effectiveType || 'unknown'
+            : 'unknown',
       },
     };
 

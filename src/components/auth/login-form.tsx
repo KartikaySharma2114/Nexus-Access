@@ -6,7 +6,13 @@ import { useAuth } from './auth-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,7 +21,7 @@ export function LoginForm() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const { signIn } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -33,7 +39,8 @@ export function LoginForm() {
       });
       router.push('/');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      const errorMessage =
+        err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
       toast({
         title: 'Error',
@@ -60,7 +67,7 @@ export function LoginForm() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -73,7 +80,7 @@ export function LoginForm() {
               disabled={isLoading}
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
@@ -86,15 +93,11 @@ export function LoginForm() {
               disabled={isLoading}
             />
           </div>
-          
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
-          >
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
-          
+
           <div className="text-center">
             <Button
               type="button"
@@ -102,7 +105,7 @@ export function LoginForm() {
               onClick={() => router.push('/signup')}
               className="text-sm"
             >
-              Don't have an account? Sign up
+              Don&apos;t have an account? Sign up
             </Button>
           </div>
         </form>

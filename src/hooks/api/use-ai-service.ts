@@ -63,7 +63,8 @@ export const aiServiceKeys = {
 export function useAIAvailability() {
   return useQuery({
     queryKey: aiServiceKeys.availability(),
-    queryFn: () => apiClient.get<{ available: boolean }>('/ai-service/availability'),
+    queryFn: () =>
+      apiClient.get<{ available: boolean }>('/ai-service/availability'),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 1, // Only retry once for availability checks

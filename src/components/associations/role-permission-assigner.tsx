@@ -260,7 +260,9 @@ export function RolePermissionAssigner({
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-foreground">{permission.name}</h4>
+                          <h4 className="font-medium text-foreground">
+                            {permission.name}
+                          </h4>
                           {isAssigned && (
                             <Badge variant="default" className="text-xs">
                               Assigned

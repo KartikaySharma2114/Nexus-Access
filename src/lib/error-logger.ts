@@ -66,14 +66,14 @@ export class ErrorLogger {
    * Remove error reporter
    */
   removeReporter(name: string): void {
-    this.reporters = this.reporters.filter(r => r.name !== name);
+    this.reporters = this.reporters.filter((r) => r.name !== name);
   }
 
   /**
    * Enable/disable reporter
    */
   setReporterEnabled(name: string, enabled: boolean): void {
-    const reporter = this.reporters.find(r => r.name === name);
+    const reporter = this.reporters.find((r) => r.name === name);
     if (reporter) {
       reporter.enabled = enabled;
     }
@@ -107,8 +107,8 @@ export class ErrorLogger {
 
     // Report to all enabled reporters
     const reportPromises = this.reporters
-      .filter(reporter => reporter.enabled)
-      .map(async reporter => {
+      .filter((reporter) => reporter.enabled)
+      .map(async (reporter) => {
         try {
           await reporter.report(error);
         } catch (reportError) {
@@ -146,7 +146,7 @@ export class ErrorLogger {
    */
   private addToBuffer(entry: LogEntry): void {
     this.logBuffer.push(entry);
-    
+
     // Maintain buffer size
     if (this.logBuffer.length > this.maxBufferSize) {
       this.logBuffer = this.logBuffer.slice(-this.maxBufferSize);
@@ -215,7 +215,7 @@ export class ErrorLogger {
     try {
       const storageKey = 'error_logs';
       const existingLogs = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      
+
       const errorLog = {
         id: error.id,
         type: error.type,
@@ -261,7 +261,7 @@ export class ErrorLogger {
     recent: number;
   } {
     const now = Date.now();
-    const oneHourAgo = now - (60 * 60 * 1000);
+    const oneHourAgo = now - 60 * 60 * 1000;
 
     const stats = {
       total: this.logBuffer.length,
@@ -270,7 +270,7 @@ export class ErrorLogger {
       recent: 0,
     };
 
-    this.logBuffer.forEach(entry => {
+    this.logBuffer.forEach((entry) => {
       // Count by level
       stats.byLevel[entry.level] = (stats.byLevel[entry.level] || 0) + 1;
 
