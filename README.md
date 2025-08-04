@@ -2,8 +2,6 @@
 
 A modern, AI-powered Role-Based Access Control (RBAC) management system built with Next.js 15, Supabase, and natural language processing capabilities.
 
-![RBAC Tool Demo](https://via.placeholder.com/800x400/1a1a1a/ffffff?text=RBAC+Configuration+Tool)
-
 ## 🎯 What is RBAC?
 
 Role-Based Access Control (RBAC) is a security model that controls system access by assigning permissions to roles, then roles to users. Instead of managing individual user permissions, you create roles like "Admin" or "Editor" with specific permissions, making access control scalable, organized, and secure.
@@ -40,7 +38,7 @@ Role-Based Access Control (RBAC) is a security model that controls system access
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/rbac-tool.git
+   git clone https://github.com/KartikaySharma2114/RBAC-Configuration-Tool.git
    cd rbac-tool
    ```
 
