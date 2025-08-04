@@ -1,65 +1,224 @@
 # RBAC Configuration Tool
 
-A modern Role-Based Access Control (RBAC) management system built with Next.js 15, Supabase, and AI-powered natural language commands.
+A modern, AI-powered Role-Based Access Control (RBAC) management system built with Next.js 15, Supabase, and natural language processing capabilities.
 
-## What is RBAC?
+![RBAC Tool Demo](https://via.placeholder.com/800x400/1a1a1a/ffffff?text=RBAC+Configuration+Tool)
 
-RBAC controls who can access what in your application by assigning permissions to roles, then roles to users. Instead of managing individual user permissions, you create roles like "Admin" or "Editor" with specific permissions, making access control scalable and organized.
+## 🎯 What is RBAC?
 
-## Features
+Role-Based Access Control (RBAC) is a security model that controls system access by assigning permissions to roles, then roles to users. Instead of managing individual user permissions, you create roles like "Admin" or "Editor" with specific permissions, making access control scalable, organized, and secure.
 
-- **Permission Management**: Create and manage granular permissions
-- **Role Management**: Define roles and assign permissions to them
-- **Visual Association Matrix**: See role-permission relationships at a glance
-- **AI Commands**: Use natural language to manage RBAC (e.g., "Create admin role with all permissions")
-- **Real-time Updates**: Changes sync instantly across all users
-- **Secure Authentication**: Built on Supabase Auth with row-level security
+## ✨ Features
 
-## Quick Start
+### Core RBAC Management
+- **🔐 Permission Management**: Create and manage granular permissions with descriptions
+- **👥 Role Management**: Define roles and assign multiple permissions efficiently  
+- **📊 Visual Association Matrix**: Interactive grid showing role-permission relationships
+- **🔄 Real-time Updates**: Changes sync instantly across all connected users
 
-1. **Clone and Install**:
+### AI-Powered Interface
+- **🤖 Natural Language Commands**: Use plain English to manage RBAC
+  - *"Create admin role with all permissions"*
+  - *"Remove write access from editor role"*
+  - *"Show me all users with delete permissions"*
+- **🧠 Smart Suggestions**: AI-powered recommendations for role configurations
 
+### Security & Performance
+- **🛡️ Row-Level Security**: Built-in Supabase RLS policies
+- **⚡ Optimistic Updates**: Instant UI feedback with rollback on errors
+- **🔒 Secure Authentication**: Multi-provider auth with session management
+- **📱 Responsive Design**: Works seamlessly on desktop and mobile
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm
+- Supabase account
+- Google AI API key (for natural language features)
+
+### Installation
+
+1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/yourusername/rbac-tool.git
    cd rbac-tool
+   ```
+
+2. **Install dependencies**
+   ```bash
    npm install --legacy-peer-deps
    ```
 
-2. **Set up Environment**:
-
+3. **Set up environment variables**
    ```bash
    cp .env.example .env.local
-   # Add your Supabase and Google AI API keys
+   ```
+   
+   Edit `.env.local` and add your credentials:
+   ```env
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   
+   # Google AI Configuration  
+   GOOGLE_GEMINI_API_KEY=your_google_ai_api_key
+   
+   # Application Configuration
+   NEXTAUTH_SECRET=your_secure_random_string
+   NEXTAUTH_URL=http://localhost:3000
    ```
 
-3. **Run Development Server**:
+4. **Set up the database**
+   ```bash
+   # If using Supabase CLI locally
+   npm run supabase:start
+   npm run db:seed
+   
+   # Or run the manual seed script
+   npm run db:seed-manual
+   ```
 
+5. **Start the development server**
    ```bash
    npm run dev
    ```
 
-4. **Visit**: http://localhost:3000
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-## Test Credentials
+## 🧪 Demo Credentials
 
-For evaluation purposes, use these test credentials:
+For testing purposes, you can use these sample credentials:
 
-- **Email**: admin@rbac-tool.com
-- **Password**: TestAdmin123!
+- **Email**: `admin@rbac-tool.com`
+- **Password**: `TestAdmin123!`
 
-## Documentation
+## 🏗️ Project Structure
 
-- [Deployment Guide](./DEPLOYMENT.md) - Complete deployment instructions
-- [API Documentation](./docs/api.md) - API endpoints reference
-- [Component Guide](./docs/components.md) - UI components documentation
+```
+rbac-tool/
+├── src/
+│   ├── app/                 # Next.js 15 App Router
+│   ├── components/          # Reusable UI components
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Utilities and configurations
+│   └── middleware.ts       # Auth and security middleware
+├── supabase/
+│   ├── migrations/         # Database schema migrations
+│   └── seed.sql           # Sample data for development
+├── scripts/               # Database and deployment scripts
+└── public/               # Static assets
+```
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
-- **AI**: Google Gemini API for natural language processing
-- **Deployment**: Vercel with GitHub Actions CI/CD
+### Frontend
+- **Next.js 15** - React framework with App Router
+- **React 19** - Latest React with concurrent features
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first styling
+- **Radix UI** - Accessible component primitives
+- **React Query** - Server state management
 
-## License
+### Backend & Database
+- **Supabase** - PostgreSQL database with real-time subscriptions
+- **Row-Level Security** - Database-level access control
+- **Supabase Auth** - Multi-provider authentication
 
-MIT License - see LICENSE file for details.
+### AI & APIs
+- **Google Gemini API** - Natural language processing
+- **Structured AI Responses** - Type-safe AI interactions
+
+### Development & Deployment
+- **ESLint + Prettier** - Code quality and formatting
+- **Vercel** - Deployment and hosting
+- **GitHub Actions** - CI/CD pipeline
+
+## 📚 Available Scripts
+
+```bash
+# Development
+npm run dev              # Start development server with Turbopack
+npm run build           # Build for production
+npm run start           # Start production server
+
+# Code Quality
+npm run lint            # Run ESLint
+npm run lint:fix        # Fix ESLint issues
+npm run format          # Format code with Prettier
+npm run type-check      # TypeScript type checking
+
+# Database
+npm run db:reset        # Reset Supabase database
+npm run db:seed         # Seed database with sample data
+npm run supabase:start  # Start local Supabase instance
+
+# Deployment
+npm run deploy          # Deploy to Vercel production
+npm run deploy:preview  # Deploy preview build
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | ✅ |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | ✅ |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | ✅ |
+| `GOOGLE_GEMINI_API_KEY` | Google AI API key | ✅ |
+| `NEXTAUTH_SECRET` | NextAuth.js secret key | ✅ |
+| `NEXTAUTH_URL` | Application URL | ✅ |
+
+### Database Schema
+
+The application uses a simple but powerful RBAC schema:
+
+- **Users** - Authentication and user profiles
+- **Roles** - Named collections of permissions
+- **Permissions** - Granular access rights
+- **Role_Permissions** - Many-to-many relationship
+- **User_Roles** - User role assignments
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+1. **Connect your GitHub repository to Vercel**
+2. **Set environment variables in Vercel dashboard**
+3. **Deploy automatically on push to main branch**
+
+### Manual Deployment
+
+```bash
+# Build the application
+npm run build
+
+# Deploy to Vercel
+npm run deploy
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Supabase](https://supabase.com) for the amazing backend-as-a-service
+- [Vercel](https://vercel.com) for seamless deployment
+- [Radix UI](https://radix-ui.com) for accessible components
+- [Google AI](https://ai.google.dev) for natural language processing
+
+---
+
+**Built with ❤️ using Next.js 15 and Supabase**

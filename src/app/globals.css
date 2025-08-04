@@ -132,10 +132,16 @@
       fill 0.3s ease,
       stroke 0.3s ease,
       opacity 0.3s ease,
-      box-shadow 0.3s ease,
-      transform 0.3s ease,
-      filter 0.3s ease,
-      backdrop-filter 0.3s ease;
+      box-shadow 0.3s ease;
+  }
+  
+  /* Apply transform/filter transitions only to specific elements that need them */
+  .transition-transform {
+    transition: transform 0.3s ease;
+  }
+  
+  .transition-filter {
+    transition: filter 0.3s ease, backdrop-filter 0.3s ease;
   }
   
   /* Prevent transitions on page load */
