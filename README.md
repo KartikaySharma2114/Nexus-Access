@@ -1,4 +1,4 @@
-# RBAC Configuration Tool
+# Nexus Access
 
 A modern, AI-powered Role-Based Access Control (RBAC) management system built with Next.js 15, Supabase, and natural language processing capabilities.
 
